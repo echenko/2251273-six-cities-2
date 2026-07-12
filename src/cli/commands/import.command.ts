@@ -8,16 +8,16 @@ function printDataAsCards(data: Array<Record<string, unknown>>): void {
 
     Object.entries(item).forEach(([key, value]) => {
       const formattedKey = chalk.cyan(`  ${key.padEnd(15)}`);
-      let formattedValue: string;
+      let formattedValue: string = chalk.green(String(value));
 
       if (typeof value === 'number') {
         formattedValue = chalk.yellow(String(value));
-      } else if (typeof value === 'boolean') {
+      }
+      if (typeof value === 'boolean') {
         formattedValue = chalk.magenta(String(value));
-      } else if (value === null || value === undefined) {
+      }
+      if (value === null || value === undefined) {
         formattedValue = chalk.gray('null');
-      } else {
-        formattedValue = chalk.green(String(value));
       }
 
       console.log(`${formattedKey}${chalk.gray(':')} ${formattedValue}`);
