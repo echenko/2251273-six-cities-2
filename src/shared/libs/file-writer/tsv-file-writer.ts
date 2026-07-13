@@ -23,4 +23,8 @@ export class TSVFileWriter implements FileWriter {
 
     return Promise.resolve();
   }
+
+  public async close(): Promise<void> {
+    this.stream.close();
+  }
 }
