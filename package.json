@@ -17,7 +17,6 @@
     "ts": "tsx",
     "cli": "node ./dist/main.cli.js",
     "server:dev": "json-server ./mocks/mock-server-data.json --port 4000 --watch"
-
   },
   "devDependencies": {
     "@types/node": "^18.19.130",
@@ -37,6 +36,8 @@
     "npm": ">=8"
   },
   "dependencies": {
-    "chalk": "5.6.2"
+    "chalk": "5.6.2",
+    "got": "15.1.0",
+    "uuid": "14.0.1"
   }
 }

@@ -7,7 +7,6 @@ function getRandomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-
 function getRandomItems<T>(array: T[], count: number = 1, randomize: boolean = false): T[] {
   const startIndex = Math.floor(Math.random() * (array.length - count));
   if (randomize) {

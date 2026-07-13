@@ -1,6 +1,6 @@
 {
   "api": {
-    "title": [
+    "titles": [
       "Cozy studio near canal in Amsterdam",
       "Spacious family house in Hamburg",
       "Modern room close to museums in Paris",
@@ -10,25 +10,13 @@
       "Stylish loft with river view",
       "Comfortable apartment near central station"
     ],
-    "type": [
+    "types": [
       "apartment",
       "house",
       "room",
       "hotel"
     ],
-    "price": [
-      100,
-      200,
-      300,
-      400,
-      500,
-      600,
-      700,
-      800,
-      900,
-      1000
-    ],
-    "city": [
+    "cites": [
       "Paris",
       "Cologne",
       "Brussels",
@@ -36,7 +24,7 @@
       "Hamburg",
       "Dusseldorf"
     ],
-    "location": {
+    "locations": {
       "Paris": {
         "latitude": 48.85661,
         "longitude": 2.351499,
@@ -69,22 +57,7 @@
         "zoom": 13
       }
     },
-    "isFavorite": [
-      true,
-      false
-    ],
-    "isPremium": [
-      true,
-      false
-    ],
-    "rating": [
-      1,
-      2,
-      3,
-      4,
-      5
-    ],
-    "previewImage": [
+    "previewImages": [
       "preview-1.jpg",
       "preview-2.jpg",
       "preview-3.jpg",

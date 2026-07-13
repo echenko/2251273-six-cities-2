@@ -1,23 +1,11 @@
-export type OffersElementType = {
-  id: string;
-  title: string;
-  type: string;
-  price: number;
-  city: {
-    name: string;
-    location: {
-      latitude: number;
-      longitude: number;
-      zoom: number;
-    };
+import { LocationType } from './index.type.js';
+
+export type MockServerDataType = {
+  titles: string[];
+  types: string[];
+  cites: string[];
+  locations: {
+    [key: string]: LocationType;
   };
-  location: {
-    latitude: number;
-    longitude: number;
-    zoom: number;
-  };
-  isFavorite: boolean;
-  isPremium: boolean;
-  rating: number;
-  previewImage: string;
-}
+  previewImages: string[];
+};
