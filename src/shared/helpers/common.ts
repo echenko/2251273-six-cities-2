@@ -16,10 +16,6 @@ function getRandomItems<T>(array: T[], count: number = 1, randomize: boolean = f
   return array.slice(startIndex, startIndex + count);
 }
 
-const arr = [1,2,3,4,5,6,7,8,9,10];
-
-console.log(getRandomItems(arr, 3));
-
 export {
   generateRandomValue,
   getRandomItem,
