@@ -1,13 +1,16 @@
+// tsv-file-reader.ts
 import { FileReader } from './file-reader.interface.js';
 import { readFileSync } from 'node:fs';
 import { OffersItemType } from '../../types/index.type.js';
+import { ParserInterface } from './../tsv-parser/tsv-parser.interface.js';
 
 export class TSVFileReader implements FileReader {
   private rawData = '';
 
   constructor(
-    private readonly filename: string
-  ) { }
+    private readonly filename: string,
+    private readonly parser: ParserInterface,
+  ) {}
 
   public read(): void {
     this.rawData = readFileSync(this.filename, { encoding: 'utf-8' });
@@ -21,43 +24,6 @@ export class TSVFileReader implements FileReader {
     return this.rawData
       .split('\n')
       .filter((row) => row.trim().length > 0)
-      .map((line) => line.split('\t'))
-      .map(([id,
-        title,
-        type,
-        price,
-        previewImage,
-        cityName,
-        cityLocationLatitude,
-        cityLocationLongitude,
-        cityLocationZoom,
-        offerLocationLatitude,
-        offerLocationLongitude,
-        offerLocationZoom,
-        isFavorite,
-        isPremium,
-        rating,]) => ({
-        id,
-        title,
-        type,
-        price: Number(price),
-        city: {
-          name: cityName,
-          location: {
-            latitude: Number(cityLocationLatitude),
-            longitude: Number(cityLocationLongitude),
-            zoom: Number(cityLocationZoom),
-          }
-        },
-        location: {
-          latitude: Number(offerLocationLatitude),
-          longitude: Number(offerLocationLongitude),
-          zoom: Number(offerLocationZoom),
-        },
-        isFavorite: isFavorite === 'true',
-        isPremium: isPremium === 'true',
-        rating: Number(rating),
-        previewImage,
-      }));
+      .map((line) => this.parser.parse(line));
   }
 }

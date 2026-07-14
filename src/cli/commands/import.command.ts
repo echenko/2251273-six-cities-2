@@ -1,6 +1,7 @@
 import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
 import chalk from 'chalk';
+import { TSVParser } from '../../shared/libs/tsv-parser/tsv-parser.js';
 
 function printDataAsCards(data: Array<Record<string, unknown>>): void {
   data.forEach((item, index) => {
@@ -34,7 +35,7 @@ export class ImportCommand implements Command {
 
   public execute(...parameters: string[]): void {
     const [filename] = parameters;
-    const fileReader = new TSVFileReader(filename.trim());
+    const fileReader = new TSVFileReader(filename.trim(), new TSVParser());
 
     console.info(
       chalk.cyan('📥 Importing data from file:'),

@@ -1,5 +1,7 @@
 import { OffersItemType } from '../../types/index.type.js';
 import { FormatterInterface } from './tsv-formatter.interface.js';
+import { TSV_FIELDS_OFFER } from '../../const.js';
+import { getNestedValue } from '../../helpers/index.js';
 
 export class TSVFormatter implements FormatterInterface {
   public format(offer: OffersItemType): string {
@@ -8,22 +10,9 @@ export class TSVFormatter implements FormatterInterface {
   }
 
   private extractFields(offer: OffersItemType): string[] {
-    return [
-      offer.id,
-      offer.title,
-      offer.type,
-      String(offer.price),
-      offer.previewImage,
-      offer.city.name,
-      String(offer.city.location.latitude),
-      String(offer.city.location.longitude),
-      String(offer.city.location.zoom),
-      String(offer.location.latitude),
-      String(offer.location.longitude),
-      String(offer.location.zoom),
-      String(offer.isFavorite),
-      String(offer.isPremium),
-      String(offer.rating),
-    ];
+    return TSV_FIELDS_OFFER.map((field) => {
+      const value = getNestedValue(offer, field);
+      return String(value ?? '');
+    });
   }
 }
