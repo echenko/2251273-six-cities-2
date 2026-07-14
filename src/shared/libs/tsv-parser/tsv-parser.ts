@@ -3,7 +3,6 @@ import { OffersItemType } from '../../types/index.type.js';
 import { TSV_FIELDS_OFFER } from '../../const.js';
 import { setNestedValue } from '../../helpers/index.js';
 
-// Поля, которые нужно преобразовать в числа
 const NUMERIC_FIELDS = new Set([
   'price',
   'city.location.latitude',
@@ -15,7 +14,6 @@ const NUMERIC_FIELDS = new Set([
   'rating',
 ]);
 
-// Поля, которые нужно преобразовать в булевы значения
 const BOOLEAN_FIELDS = new Set([
   'isFavorite',
   'isPremium',

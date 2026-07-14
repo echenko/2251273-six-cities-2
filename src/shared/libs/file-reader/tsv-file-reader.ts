@@ -1,4 +1,3 @@
-// tsv-file-reader.ts
 import { FileReader } from './file-reader.interface.js';
 import { readFileSync } from 'node:fs';
 import { OffersItemType } from '../../types/index.type.js';
