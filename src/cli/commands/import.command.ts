@@ -2,29 +2,34 @@ import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
 import chalk from 'chalk';
 import { TSVParser } from '../../shared/libs/tsv-parser/tsv-parser.js';
+import { inspect } from 'node:util';
 
 function printDataAsCards(data: Array<Record<string, unknown>>): void {
   data.forEach((item, index) => {
     console.info(chalk.bold.blue(`\n  #${index + 1}`));
 
-    Object.entries(item).forEach(([key, value]) => {
-      const formattedKey = chalk.cyan(`  ${key.padEnd(15)}`);
-      let formattedValue: string = chalk.green(String(value));
+    const maxKeyLen = Math.max(...Object.keys(item).map((k) => k.length), 15);
 
-      if (typeof value === 'number') {
-        formattedValue = chalk.yellow(String(value));
-      }
-      if (typeof value === 'boolean') {
-        formattedValue = chalk.magenta(String(value));
-      }
+    Object.entries(item).forEach(([key, value]) => {
+      const formattedKey = chalk.cyan(`  ${key.padEnd(maxKeyLen)}`);
+      let formattedValue: string;
+
       if (value === null || value === undefined) {
-        formattedValue = chalk.gray('null');
+        formattedValue = chalk.gray(String(value));
+      } else if (typeof value === 'string') {
+        formattedValue = chalk.green(`"${value}"`);
+      } else if (typeof value === 'number') {
+        formattedValue = chalk.yellow(String(value));
+      } else if (typeof value === 'boolean') {
+        formattedValue = chalk.magenta(String(value));
+      } else {
+        formattedValue = chalk.white(inspect(value, { colors: true, depth: 2, compact: true }));
       }
 
       console.log(`${formattedKey}${chalk.gray(':')} ${formattedValue}`);
     });
 
-    console.log(chalk.gray(`  ${'─'.repeat(40)}`));
+    console.log(chalk.gray(`  ${'─'.repeat(Math.max(40, maxKeyLen + 20))}`));
   });
 }
 
@@ -33,7 +38,7 @@ export class ImportCommand implements Command {
     return '--import';
   }
 
-  public execute(...parameters: string[]): void {
+  public async execute(...parameters: string[]): Promise<void> {
     const [filename] = parameters;
     const fileReader = new TSVFileReader(filename.trim(), new TSVParser());
 
@@ -43,14 +48,19 @@ export class ImportCommand implements Command {
     );
 
     try {
-      fileReader.read();
-      const data = fileReader.toArray();
+      console.info(chalk.cyan('\n📋 Imported data (streaming):'));
 
-      console.info(chalk.green('✅ Import completed successfully.'));
-      console.info(chalk.gray(`   Records loaded: ${chalk.bold.white(data.length)}`));
+      let recordCount = 0;
 
-      console.info(chalk.cyan('\n📋 Imported data:'));
-      printDataAsCards(data);
+      for await (const parsedItem of fileReader.read()) {
+        recordCount++;
+
+        printDataAsCards([parsedItem as Record<string, unknown>]);
+      }
+
+      console.info(chalk.green('\n✅ Import completed successfully.'));
+      console.info(chalk.gray(`   Records loaded: ${chalk.bold.white(recordCount)}`));
+
     } catch (err) {
       if (!(err instanceof Error)) {
         throw err;
@@ -61,16 +71,8 @@ export class ImportCommand implements Command {
         chalk.red('Can\'t import data from file:'),
         chalk.underline.red(filename),
       );
-
-      console.error(
-        chalk.red('   Details:'),
-        chalk.gray(err.message),
-      );
-
-      console.error(
-        chalk.yellow('💡 Hint:'),
-        chalk.gray('Check that the file exists and the path is correct.'),
-      );
+      console.error(chalk.red('   Details:'), chalk.gray(err.message));
+      console.error(chalk.yellow('💡 Hint:'), chalk.gray('Check that the file exists and the path is correct.'));
     }
   }
 }

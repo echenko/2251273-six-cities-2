@@ -1,28 +1,34 @@
-import { FileReader } from './file-reader.interface.js';
-import { readFileSync } from 'node:fs';
-import { OffersItemType } from '../../types/index.type.js';
-import { ParserInterface } from './../tsv-parser/tsv-parser.interface.js';
+import * as fs from 'node:fs';
+import * as readline from 'node:readline';
+import { TSVParser } from './../tsv-parser/tsv-parser.js';
 
-export class TSVFileReader implements FileReader {
-  private rawData = '';
-
+export class TSVFileReader {
   constructor(
     private readonly filename: string,
-    private readonly parser: ParserInterface,
+    private readonly parser: TSVParser
   ) {}
 
-  public read(): void {
-    this.rawData = readFileSync(this.filename, { encoding: 'utf-8' });
-  }
+  public async *read(): AsyncIterable<unknown> {
+    const fileStream = fs.createReadStream(this.filename, { encoding: 'utf8' });
 
-  public toArray(): OffersItemType[] {
-    if (!this.rawData) {
-      throw new Error('File was not read');
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity,
+    });
+
+    let isFirstLine = true;
+
+    for await (const line of rl) {
+      if (!line.trim()) {
+        continue;
+      }
+
+      if (isFirstLine) {
+        isFirstLine = false;
+        continue;
+      }
+
+      yield this.parser.parse(line);
     }
-
-    return this.rawData
-      .split('\n')
-      .filter((row) => row.trim().length > 0)
-      .map((line) => this.parser.parse(line));
   }
 }
