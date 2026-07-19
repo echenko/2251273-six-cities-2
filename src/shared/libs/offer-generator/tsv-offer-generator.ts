@@ -4,14 +4,12 @@ import { v4 } from 'uuid';
 import { generateRandomValue, getRandomItem } from './../../helpers/index.js';
 import { OFFER_PRICE, OFFER_RATING } from './../../const.js';
 import { TSVFormatter } from '../tsv-formatter/tsv-formatter.js';
-import { logger } from './../../libs/logger/logger.index.js';
 
 export class TSVOfferGenerator implements OfferGenerator {
   constructor(private readonly mockData: MockServerDataType) { }
 
   // Генерируем оффер
   generate(): string {
-    logger.info('Generating offer...');
     const { titles, types, cites, locations, previewImages } = this.mockData;
 
     const id = v4();
@@ -53,7 +51,6 @@ export class TSVOfferGenerator implements OfferGenerator {
       rating,
     };
     const offerFormatter = new TSVFormatter().format(offer);
-    logger.info('Offer generated');
     return offerFormatter;
   }
 }
