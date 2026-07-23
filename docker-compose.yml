@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mongo:6.0
+    restart: always
+    container_name: buy-and-sell_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:27017
+    volumes:
+      - buy-and-sell_data:/data/db
+
+  db_ui:
+    image: mongo-express:1.0.2-20
+    restart: always
+    container_name: buy-and-sell_mongo_express
+    ports:
+      - 8081:8081
+
+    environment:
+      # 1. Защита самого веб-интерфейса паролем (Basic Auth)
+      ME_CONFIG_BASICAUTH_USERNAME: ${UI_USER:-admin}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${UI_PASSWORD:-admin}
+      # 2. Учетные данные, которые Mongo Express использует для подключения к самой базе данных MongoDB
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${DB_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DB_PASSWORD}
+      # 3. Строка подключения. ВАЖНО:
+      ME_CONFIG_MONGODB_URL: mongodb://${DB_USER}:${DB_PASSWORD}@db:27017/
+
+volumes:
+  buy-and-sell_data:
