@@ -12,26 +12,21 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:reset": "docker-compose down -v && docker-compose up -d",
-
     "mock": "json-server ./mocks/mock-server-data.json --port 4000 --watch",
-
     "dev:api": "tsx watch src/main.rest.ts",
     "dev:cli": "tsx src/main.cli.ts",
-
     "build": "npm run clean && npm run compile",
     "compile": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
-
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
-
     "start:rest": "node dist/main.rest.js",
     "start:cli": "node dist/main.cli.js",
-
     "dev:full": "npm run docker:up && concurrently -k -n \"API,MOCK\" -c \"cyan,yellow\" \"npm run dev:api\" \"npm run mock\"",
     "dev": "npm run docker:up && npm run dev:api"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/convict": "^6.1.6",
     "@types/convict-format-with-validator": "6.0.6",
     "@types/node": "^18.19.130",
@@ -53,6 +48,7 @@
     "npm": ">=8"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "chalk": "5.6.2",
     "convict": "6.2.5",
     "convict-format-with-validator": "6.2.0",
