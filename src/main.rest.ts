@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { RestApplication } from './rest/rest.application.js';
-import { container, TYPES } from './shared/libs/container/container.index.js';
-import { LoggerInterface } from './shared/libs/logger/logger.index.js';
+import { container, TYPES } from './shared/libs/container/index.js';
+import { LoggerInterface } from './shared/libs/logger/index.js';
 async function bootstrap() {
   try {
     const application = container.get<RestApplication>(TYPES.Application);

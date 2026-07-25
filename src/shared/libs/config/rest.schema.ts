@@ -9,6 +9,8 @@ export type RestSchema = {
   logFilePath: string;
   mockDataUrl: string;
   defaultDataPath: string;
+  mongoUrl: string;
+  mongoDbName: string;
 };
 
 export const configRestSchema = convict<RestSchema>({
@@ -41,5 +43,17 @@ export const configRestSchema = convict<RestSchema>({
     format: String,
     default: './data',
     env: 'DEFAULT_DATA_PATH',
+  },
+  mongoUrl: {
+    doc: 'MongoDB connection URI',
+    format: String,
+    default: 'mongodb://localhost:27017/six-cities',
+    env: 'MONGO_URI',
+  },
+  mongoDbName: {
+    doc: 'MongoDB database name',
+    format: String,
+    default: 'six-cities',
+    env: 'MONGO_DB_NAME',
   },
 });

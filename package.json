@@ -9,15 +9,27 @@
   ],
   "main": "main.js",
   "scripts": {
-    "start": "npm run build && node ./dist/main.rest.js",
-    "start:dev": "npm run ts ./src/main.rest.ts | pino-pretty --colorize --translateTime SYS:standard",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:reset": "docker-compose down -v && docker-compose up -d",
+
+    "mock": "json-server ./mocks/mock-server-data.json --port 4000 --watch",
+
+    "dev:api": "tsx watch src/main.rest.ts",
+    "dev:cli": "tsx src/main.cli.ts",
+
     "build": "npm run clean && npm run compile",
-    "lint": "eslint src/ --ext .ts",
     "compile": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
-    "ts": "tsx",
-    "cli": "node ./dist/main.cli.js",
-    "server:dev": "json-server ./mocks/mock-server-data.json --port 4000 --watch"
+
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "eslint src/ --ext .ts --fix",
+
+    "start:rest": "node dist/main.rest.js",
+    "start:cli": "node dist/main.cli.js",
+
+    "dev:full": "npm run docker:up && concurrently -k -n \"API,MOCK\" -c \"cyan,yellow\" \"npm run dev:api\" \"npm run mock\"",
+    "dev": "npm run docker:up && npm run dev:api"
   },
   "devDependencies": {
     "@types/convict": "^6.1.6",
@@ -25,6 +37,7 @@
     "@types/node": "^18.19.130",
     "@typescript-eslint/eslint-plugin": "6.7.0",
     "@typescript-eslint/parser": "6.7.0",
+    "concurrently": "10.0.4",
     "eslint": "8.49.0",
     "eslint-config-htmlacademy": "9.1.1",
     "json-server": "1.0.0-beta.15",
@@ -46,6 +59,7 @@
     "dotenv": "17.4.2",
     "got": "15.1.0",
     "inversify": "^8.2.1",
+    "mongoose": "9.8.0",
     "pino": "10.3.1",
     "reflect-metadata": "^0.2.2",
     "tslib": "^2.8.1",

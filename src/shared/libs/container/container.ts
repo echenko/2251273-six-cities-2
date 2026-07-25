@@ -1,8 +1,9 @@
 import { Container } from 'inversify';
 import { TYPES } from './container.types.js';
-import { PinoLogger, LoggerInterface } from './../logger/logger.index.js';
-import { RestConfig } from './../config/config.index.js';
+import { PinoLogger, LoggerInterface } from '../logger/index.js';
+import { RestConfig } from '../config/index.js';
 import { RestApplication } from './../../../rest/index.js';
+import { DatabaseClientInterface, MongoClient } from '../database/index.js';
 
 const container = new Container();
 
@@ -19,5 +20,10 @@ container
 container
   .bind<RestApplication>(TYPES.Application)
   .to(RestApplication);
+
+container
+  .bind<DatabaseClientInterface>(TYPES.DatabaseClient)
+  .to(MongoClient)
+  .inSingletonScope();
 
 export { container };
