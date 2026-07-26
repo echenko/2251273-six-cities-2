@@ -4,6 +4,7 @@ import { PinoLogger, LoggerInterface } from '../logger/index.js';
 import { RestConfig } from '../config/index.js';
 import { RestApplication } from './../../../rest/index.js';
 import { DatabaseClientInterface, MongoClient } from '../database/index.js';
+import { DefaultUserRepository, UserRepository } from '../../modules/user/index.js';
 
 const container = new Container();
 
@@ -25,5 +26,9 @@ container
   .bind<DatabaseClientInterface>(TYPES.DatabaseClient)
   .to(MongoClient)
   .inSingletonScope();
+
+container
+  .bind<UserRepository>(TYPES.UserRepository)
+  .to(DefaultUserRepository);
 
 export { container };
