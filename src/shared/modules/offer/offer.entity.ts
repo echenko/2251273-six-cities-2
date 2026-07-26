@@ -6,7 +6,7 @@ export type DocumentOffer = Omit<OfferInterface, 'user'> & Document & {
   user: Types.ObjectId;
 };
 
-export const offerSchema = new Schema<DocumentOffer>(
+export const offerSchema: Schema<DocumentOffer> = new Schema<DocumentOffer>(
   {
     title: {
       type: String,
@@ -85,20 +85,23 @@ export const offerSchema = new Schema<DocumentOffer>(
         validator: (arr: string[]) =>
           arr.every((item) =>
             [
-              'Breakfast', 'Air conditioning', 'Laptop friendly workspace',
-              'Baby seat', 'Washer', 'Towels', 'Fridge'
+              'Breakfast',
+              'Air conditioning',
+              'Laptop friendly workspace',
+              'Baby seat',
+              'Washer',
+              'Towels',
+              'Fridge',
             ].includes(item)
           ),
         message: 'Invalid feature value',
       },
     },
-
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-
     commentsCount: {
       type: Number,
       default: 0,

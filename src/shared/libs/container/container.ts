@@ -5,6 +5,7 @@ import { RestConfig } from '../config/index.js';
 import { RestApplication } from './../../../rest/index.js';
 import { DatabaseClientInterface, MongoClient } from '../database/index.js';
 import { DefaultUserRepository, UserRepository } from '../../modules/user/index.js';
+import { DefaultOfferRepository, OfferRepository } from '../../modules/offer/index.js';
 
 const container = new Container();
 
@@ -30,5 +31,9 @@ container
 container
   .bind<UserRepository>(TYPES.UserRepository)
   .to(DefaultUserRepository);
+
+container
+  .bind<OfferRepository>(TYPES.OfferRepository)
+  .to(DefaultOfferRepository);
 
 export { container };

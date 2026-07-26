@@ -1,6 +1,6 @@
 const OFFER_PRICE = {
-  min: 0,
-  max: 1000,
+  min: 100,
+  max: 100000,
 };
 
 const OFFER_RATING = {

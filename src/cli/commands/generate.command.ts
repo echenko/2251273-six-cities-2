@@ -19,7 +19,7 @@ export class GenerateCommand implements Command {
     if (!count || !filePath || !url) {
       console.error('Missing required arguments');
       console.error('Usage: --generate <count> <filepath> <url>');
-      return; // ⚠️ ВАЖНО: прерываем выполнение, иначе код пойдет дальше с undefined
+      return;
     }
 
     try {

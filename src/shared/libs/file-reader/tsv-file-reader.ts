@@ -24,7 +24,6 @@ export class TSVFileReader {
 
     // Проходимся по каждой строке
     for await (const line of rl) {
-      console.log(line);
       if (isFirstLine) {
         isFirstLine = false;
         continue;

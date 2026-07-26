@@ -4,4 +4,5 @@ export const TYPES = {
   Application: Symbol.for('Application'),
   DatabaseClient: Symbol.for('DatabaseClient'),
   UserRepository: Symbol.for('UserRepository'),
+  OfferRepository: Symbol.for('OfferRepository'),
 };
