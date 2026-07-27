@@ -22,7 +22,6 @@ export class GenerateCommand implements Command {
     const count = parseInt(countStr, 10);
 
     if (!count || !filePath || !url) {
-      // ✅ ИСПРАВЛЕНО: убран лишний пробел, только logger
       this.logger.error(
         'GenerateCommand: Missing required arguments. Usage: --generate <count> <filepath> <url>'
       );
@@ -44,7 +43,7 @@ export class GenerateCommand implements Command {
       }
 
       await writer.close();
-      this.logger.info(`GenerateCommand: ✅ Generated ${count} offers to ${filePath}`);
+      this.logger.info(`GenerateCommand: Generated ${count} offers to ${filePath}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(

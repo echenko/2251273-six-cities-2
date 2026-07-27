@@ -15,23 +15,23 @@ export class HelpCommand implements Command {
   }
 
   public async execute(..._args: string[]): Promise<void> {
-    this.logger.info('HelpCommand: Вывод справки...');
+    this.logger.info('HelpCommand: Displaying help...');
     this.logger.info(this.getHelpText());
   }
 
   private getHelpText(): string {
     return `
-${chalk.bold('CLI-утилита для подготовки данных REST API сервера')}
+${chalk.bold('CLI-application ')}
 
-${chalk.underline('Использование:')} cli.js ${chalk.cyan('<command>')} ${chalk.yellow('[arguments]')}
+${chalk.underline('Usage:')} cli.js ${chalk.cyan('<command>')} ${chalk.yellow('[arguments]')}
 
-${chalk.underline('Команды:')}
-  ${chalk.cyan('--version')}------------------------ ${chalk.magenta('вывод номера версии')}
-  ${chalk.cyan('--help')}--------------------------- ${chalk.magenta('вывод эта справка')}
-  ${chalk.cyan('--import')} ${chalk.yellow('<path>')}------------------ ${chalk.magenta('импорт из TSV')}
-  ${chalk.cyan('--generate')} ${chalk.yellow('<n> <path> <url>')}------ ${chalk.magenta('генерация тестовых данных')}
+${chalk.underline('Commands:')}
+  ${chalk.cyan('--version')}------------------------ ${chalk.magenta('display version')}
+  ${chalk.cyan('--help')}--------------------------- ${chalk.magenta('display help')}
+  ${chalk.cyan('--import')} ${chalk.yellow('<path>')}------------------ ${chalk.magenta('import data from file')}
+  ${chalk.cyan('--generate')} ${chalk.yellow('<n> <path> <url>')}------ ${chalk.magenta('generate data and save to file')}
 
-${chalk.underline('Примеры:')}
+${chalk.underline('Examples:')}
   ${chalk.green('cli.js --version')}
   ${chalk.green('cli.js --import ./data/offers.tsv')}
   ${chalk.green('cli.js --generate 50 ./data/test.tsv http://example.com/images')}

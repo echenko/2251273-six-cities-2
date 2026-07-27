@@ -15,13 +15,14 @@ export class RestApplication {
     @inject(TYPES.Config) private readonly config: RestConfig,
     @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
     @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
-    @inject(TYPES.OfferRepository) private readonly offerRepository: OfferRepository // ✅
-  ) {}
+    @inject(TYPES.OfferRepository) private readonly offerRepository: OfferRepository
+  ) { }
 
   public async init(): Promise<void> {
     const port = this.config.get('port');
     this.logger.info(`RestApplication: Rest application started on port ${port}`);
 
+    // 1. Подключение к БД
     try {
       await this.databaseClient.connect();
       this.logger.info('RestApplication: Database connection ready for operations.');
@@ -30,14 +31,13 @@ export class RestApplication {
       throw error;
     }
 
+    // 2. Настройка graceful shutdown
     this.setupGracefulShutdown();
 
+    // 3. Тестирование репозиториев
     try {
-      // ============================================================
       // ТЕСТ 1: Пользователь
-      // ============================================================
       let user = await this.userRepository.findByEmail('test@example.com');
-
       if (!user) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash('securePassword123', salt);
@@ -53,9 +53,7 @@ export class RestApplication {
         this.logger.info(`RestApplication: User found: ${user.email}`);
       }
 
-      // ============================================================
       // ТЕСТ 2: Создание оффера через репозиторий
-      // ============================================================
       const testOffer = await this.offerRepository.create({
         title: 'Cozy apartment in Paris center',
         description: 'Beautiful apartment with a view of the Eiffel Tower. Perfect for couples.',
@@ -70,40 +68,30 @@ export class RestApplication {
         maxPeople: 4,
         price: 15000,
         features: ['Breakfast', 'Washer', 'Fridge'],
-        user: user._id as Types.ObjectId, // Связь с пользователем
+        user: user._id as Types.ObjectId,
         commentsCount: 0,
         location: { latitude: 48.8566, longitude: 2.3522 },
       });
       this.logger.info(`RestApplication: Offer created: ${testOffer._id}`);
 
-      // ============================================================
       // ТЕСТ 3: Поиск оффера по ID (с populate)
-      // ============================================================
       const foundOffer = await this.offerRepository.findById(testOffer._id.toString());
       if (foundOffer) {
-        // После populate поле user — это объект пользователя
         const author = foundOffer.user as unknown as { email: string; firstname: string };
         this.logger.info(`RestApplication: Found offer "${foundOffer.title}" by ${author.email}`);
       }
 
-      // ============================================================
       // ТЕСТ 4: Поиск всех офферов пользователя
-      // ============================================================
       const userOffers = await this.offerRepository.findByUserId(user._id.toString());
       this.logger.info(`RestApplication: User has ${userOffers.length} offer(s)`);
 
-      // ============================================================
       // ТЕСТ 5: Поиск офферов по городу
-      // ============================================================
       const parisOffers = await this.offerRepository.findByCity('Paris');
       this.logger.info(`RestApplication: Paris has ${parisOffers.length} offer(s)`);
 
-      // ============================================================
       // ТЕСТ 6: Получение всех офферов (с лимитом)
-      // ============================================================
       const allOffers = await this.offerRepository.findAll(10);
       this.logger.info(`RestApplication: Fetched ${allOffers.length} offer(s) from DB`);
-
     } catch (error) {
       this.logger.error(error as Error, 'RestApplication: Error in repository test');
     }
@@ -115,9 +103,11 @@ export class RestApplication {
       try {
         await this.databaseClient.disconnect();
         this.logger.info('RestApplication: Graceful shutdown completed.');
+
+        process.exitCode = 0;
       } catch (error) {
         this.logger.error(error as Error, 'RestApplication: Error during shutdown');
-        throw error;
+        process.exitCode = 1;
       }
     };
 
