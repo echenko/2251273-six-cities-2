@@ -1,4 +1,4 @@
 export interface Command {
   getName(): string;
-  execute(...args: string[]): void;
+  execute(...parameters: string[]): Promise<void>;
 }

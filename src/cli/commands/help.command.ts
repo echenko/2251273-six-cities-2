@@ -1,13 +1,22 @@
+import { inject, injectable } from 'inversify';
 import { Command } from './command.interface.js';
 import chalk from 'chalk';
+import { TYPES } from '../../shared/libs/container/index.js';
+import { LoggerInterface } from '../../shared/libs/logger/index.js';
 
+@injectable()
 export class HelpCommand implements Command {
+  constructor(
+    @inject(TYPES.Logger) private readonly logger: LoggerInterface
+  ) { }
+
   public getName(): string {
     return '--help';
   }
 
-  public execute(..._args: string[]): void {
-    console.info(this.getHelpText());
+  public async execute(..._args: string[]): Promise<void> {
+    this.logger.info('HelpCommand: Вывод справки...');
+    this.logger.info(this.getHelpText());
   }
 
   private getHelpText(): string {

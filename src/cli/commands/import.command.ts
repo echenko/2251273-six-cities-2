@@ -1,48 +1,49 @@
 import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
 import { TSVParser } from '../../shared/libs/tsv-parser/index.js';
-import chalk from 'chalk';
-import mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import * as dotenv from 'dotenv';
 import { UserModel } from '../../shared/modules/user/user.entity.js';
 import { OfferModel } from '../../shared/modules/offer/offer.entity.js';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../shared/libs/container/index.js';
+import { LoggerInterface } from '../../shared/libs/logger/index.js';
+import { DatabaseClientInterface } from '../../shared/libs/database/index.js';
 
+@injectable()
 export class ImportCommand implements Command {
+  constructor(
+    @inject(TYPES.Logger) private readonly logger: LoggerInterface,
+    @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
+  ) {}
+
   public getName(): string {
     return '--import';
   }
 
   public async execute(...parameters: string[]): Promise<void> {
     const filename = parameters[0]?.trim();
-
     if (!filename) {
-      console.error(chalk.red('ImportCommand: ERROR: Filename is required'));
+      this.logger.error('ImportCommand: Filename is required');
       return;
     }
 
-    dotenv.config();
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/six-cities';
-
-    console.info(chalk.cyan(`ImportCommand: Importing: ${filename}`));
-    console.info(chalk.cyan('ImportCommand: Connecting to MongoDB...'));
+    this.logger.info(`ImportCommand: Importing: ${filename}`);
 
     try {
-      await mongoose.connect(mongoUri);
-      console.info(chalk.green('ImportCommand: Connected to MongoDB'));
+      // ✅ Подключение через DatabaseClient (единая точка входа)
+      await this.databaseClient.connect();
 
       const reader = new TSVFileReader(filename, new TSVParser());
       const data = await reader.read();
 
       if (!data || data.length === 0) {
-        console.warn(chalk.yellow('ImportCommand: No records found'));
+        this.logger.warn('ImportCommand: No records found');
         return;
       }
 
-      console.info(chalk.cyan(`ImportCommand: Found ${data.length} record(s)\n`));
+      this.logger.info(`ImportCommand: Found ${data.length} record(s)`);
 
       const defaultUser = await this.getOrCreateDefaultUser();
-
       let count = 0;
       let errors = 0;
 
@@ -53,26 +54,28 @@ export class ImportCommand implements Command {
         } catch (err) {
           errors++;
           const msg = err instanceof Error ? err.message : String(err);
-          console.error(chalk.red(`ImportCommand: Record ${count + errors}: ${msg}`));
+          this.logger.error(
+            err instanceof Error ? err : new Error(msg),
+            `ImportCommand: Record ${count + errors} failed`
+          );
         }
       }
 
-      console.info(chalk.green(`\nImportCommand: Imported: ${count}`));
+      this.logger.info(`ImportCommand: Imported: ${count}`);
       if (errors > 0) {
-        console.info(chalk.red(`ImportCommand: Failed: ${errors}`));
+        this.logger.error(new Error(`${errors} record(s) failed`), 'ImportCommand: Some records failed');
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(chalk.red(`\nImportCommand: Import failed: ${msg}`));
+      this.logger.error(
+        err instanceof Error ? err : new Error(String(err)),
+        'ImportCommand: Import failed'
+      );
     } finally {
-      await mongoose.disconnect();
-      console.info(chalk.cyan('🔌 Disconnected'));
+      // ✅ Отключение через DatabaseClient
+      await this.databaseClient.disconnect();
     }
   }
 
-  // ============================================================
-  // Создаём или находим дефолтного пользователя
-  // ============================================================
   private async getOrCreateDefaultUser() {
     const defaultEmail = 'import-user@six-cities.local';
     let user = await UserModel.findOne({ email: defaultEmail });
@@ -80,7 +83,6 @@ export class ImportCommand implements Command {
     if (!user) {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash('ImportUser123!', salt);
-
       user = await UserModel.create({
         email: defaultEmail,
         firstname: 'Import',
@@ -88,17 +90,14 @@ export class ImportCommand implements Command {
         password: hash,
         type: 'regular',
       });
-      console.info(chalk.green(`ImportCommand: Default user created: ${user._id}`));
+      this.logger.info(`ImportCommand: Default user created: ${user._id}`);
     } else {
-      console.info(chalk.green(`ImportCommand: Default user found: ${user._id}`));
+      this.logger.info(`ImportCommand: Default user found: ${user._id}`);
     }
 
     return user;
   }
 
-  // ============================================================
-  // Сохраняем один оффер
-  // ============================================================
   private async saveOffer(item: Record<string, unknown>, userId: string): Promise<void> {
     let cityName: string;
     if (typeof item.city === 'object' && item.city !== null) {
@@ -119,7 +118,6 @@ export class ImportCommand implements Command {
     }
 
     const preview = String(item.previewImage || item.preview || 'default.jpg');
-
     let images: string[];
     if (Array.isArray(item.images)) {
       images = item.images.map(String);

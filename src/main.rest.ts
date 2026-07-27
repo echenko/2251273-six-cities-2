@@ -9,9 +9,9 @@ async function bootstrap() {
   } catch (error) {
     try {
       const logger = container.get<LoggerInterface>(TYPES.Logger);
-      logger.error(error as Error, '💥 Fatal error during bootstrap');
+      logger.error(error as Error, 'RestApplication: Fatal error during bootstrap');
     } catch {
-      console.error('💥 Fatal error during bootstrap:', error);
+      console.error('RestApplication: Fatal error during bootstrap:', error);
     }
     throw error;
   }
