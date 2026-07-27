@@ -4,14 +4,14 @@ import { mkdirSync } from 'node:fs';
 import { LoggerInterface } from './logger.interface.js';
 import { injectable } from 'inversify';
 
-const logDir = resolve(process.cwd(), './logs');
-mkdirSync(logDir, { recursive: true });
-
 @injectable()
 export class PinoLogger implements LoggerInterface {
   private readonly logger: PinoInstance;
 
   constructor() {
+    const logDir = resolve(process.cwd(), './logs');
+    mkdirSync(logDir, { recursive: true });
+
     this.logger = pino({
       transport: {
         targets: [
@@ -21,40 +21,55 @@ export class PinoLogger implements LoggerInterface {
               colorize: true,
               destination: 2,
               translateTime: 'SYS:standard',
-              ignore: 'pid,hostname'
+              ignore: 'pid,hostname',
             },
           },
           {
             target: 'pino/file',
             options: { destination: resolve(logDir, 'cli-app.log') },
-          }
-        ]
-      }
+          },
+        ],
+      },
     });
   }
 
   public debug(message: string, ...args: unknown[]): void {
-    const logFn = this.logger.debug.bind(this.logger) as unknown as (msg: string, ...rest: unknown[]) => void;
-    logFn(message, ...args);
+    if (args.length > 0) {
+      this.logger.debug({ args }, message);
+    } else {
+      this.logger.debug(message);
+    }
   }
 
   public info(message: string, ...args: unknown[]): void {
-    const logFn = this.logger.info.bind(this.logger) as unknown as (msg: string, ...rest: unknown[]) => void;
-    logFn(message, ...args);
+    if (args.length > 0) {
+      this.logger.info({ args }, message);
+    } else {
+      this.logger.info(message);
+    }
   }
 
   public warn(message: string, ...args: unknown[]): void {
-    const logFn = this.logger.warn.bind(this.logger) as unknown as (msg: string, ...rest: unknown[]) => void;
-    logFn(message, ...args);
+    if (args.length > 0) {
+      this.logger.warn({ args }, message);
+    } else {
+      this.logger.warn(message);
+    }
   }
 
   public error(errorOrMessage: Error | string, ...args: unknown[]): void {
     if (errorOrMessage instanceof Error) {
-      const logFn = this.logger.error.bind(this.logger) as unknown as (err: Error, ...rest: unknown[]) => void;
-      logFn(errorOrMessage, ...args);
+      if (args.length > 0) {
+        this.logger.error({ err: errorOrMessage, args }, errorOrMessage.message);
+      } else {
+        this.logger.error({ err: errorOrMessage }, errorOrMessage.message);
+      }
     } else {
-      const logFn = this.logger.error.bind(this.logger) as unknown as (msg: string, ...rest: unknown[]) => void;
-      logFn(errorOrMessage, ...args);
+      if (args.length > 0) {
+        this.logger.error({ args }, errorOrMessage);
+      } else {
+        this.logger.error(errorOrMessage);
+      }
     }
   }
 }

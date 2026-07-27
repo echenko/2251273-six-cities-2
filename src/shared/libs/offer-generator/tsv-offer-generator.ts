@@ -6,26 +6,23 @@ import { OFFER_PRICE, OFFER_RATING } from './../../const.js';
 import { TSVFormatter } from '../tsv-formatter/tsv-formatter.js';
 
 export class TSVOfferGenerator implements OfferGenerator {
-  constructor(private readonly mockData: MockServerDataType) { }
+  constructor(private readonly mockData: MockServerDataType) {}
 
-  // Генерируем оффер
-  generate(): string {
+  public generate(): string {
     const { titles, types, cites, locations, previewImages } = this.mockData;
 
     const id = v4();
     const title = getRandomItem(titles);
     const type = getRandomItem(types);
     const cityName = getRandomItem(cites);
-
-    const cityLocation = locations[cityName] ?? { latitude: 0, longitude: 0, zoom: 0 };
     const previewImage = getRandomItem(previewImages);
 
-    const offerLocation = locations[cityName] ?? { latitude: 0, longitude: 0, zoom: 0 };
+    const location = locations[cityName] ?? { latitude: 0, longitude: 0, zoom: 0 };
 
     const price = generateRandomValue(OFFER_PRICE.min, OFFER_PRICE.max);
     const rating = Number(generateRandomValue(OFFER_RATING.min, OFFER_RATING.max, 1).toFixed(1));
     const isFavorite = getRandomItem([true, false]);
-    const isPremium = (getRandomItem([true, false]));
+    const isPremium = getRandomItem([true, false]);
 
     const offer: OffersItemType = {
       id,
@@ -36,20 +33,21 @@ export class TSVOfferGenerator implements OfferGenerator {
       city: {
         name: cityName,
         location: {
-          latitude: cityLocation.latitude,
-          longitude: cityLocation.longitude,
-          zoom: cityLocation.zoom,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          zoom: location.zoom,
         },
       },
       location: {
-        latitude: offerLocation.latitude,
-        longitude: offerLocation.longitude,
-        zoom: offerLocation.zoom,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        zoom: location.zoom,
       },
       isFavorite,
       isPremium,
       rating,
     };
+
     const offerFormatter = new TSVFormatter().format(offer);
     return offerFormatter;
   }
