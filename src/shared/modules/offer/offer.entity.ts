@@ -6,7 +6,7 @@ export type DocumentOffer = Omit<OfferInterface, 'user'> & Document & {
   user: Types.ObjectId;
 };
 
-export const offerSchema: Schema<DocumentOffer> = new Schema<DocumentOffer>(
+export const offerSchema = new Schema<DocumentOffer>(
   {
     title: {
       type: String,

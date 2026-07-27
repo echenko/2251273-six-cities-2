@@ -14,7 +14,6 @@ async function bootstrap() {
   try {
     const cliApplication = container.get<CliApplication>(TYPES.CLIApplication);
 
-    // ✅ ВАЖНО: Регистрируем команды, получая их из контейнера
     cliApplication.registerCommands([
       container.get<HelpCommand>(TYPES.HelpCommand),
       container.get<VersionCommand>(TYPES.VersionCommand),

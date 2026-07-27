@@ -8,7 +8,7 @@ import { DocumentUser, UserModel } from './user.entity.js';
 export class DefaultUserRepository implements UserRepository {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface
-  ) {}
+  ) { }
 
   public async findById(id: string): Promise<DocumentUser | null> {
     this.logger.info(`DefaultUserRepository: Searching for user by ID ${id}`);
@@ -17,6 +17,11 @@ export class DefaultUserRepository implements UserRepository {
 
   public async findByEmail(email: string): Promise<DocumentUser | null> {
     this.logger.info(`DefaultUserRepository: Searching for user by email ${email}`);
+    return UserModel.findOne({ email }).exec();
+  }
+
+  public async findByEmailForAuth(email: string): Promise<DocumentUser | null> {
+    this.logger.info(`DefaultUserRepository: Searching for user by email ${email} for auth`);
     return UserModel.findOne({ email }).select('+password').exec();
   }
 
