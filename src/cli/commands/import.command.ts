@@ -8,6 +8,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '../../shared/libs/container/index.js';
 import { LoggerInterface } from '../../shared/libs/logger/index.js';
 import { DatabaseClientInterface } from '../../shared/libs/database/index.js';
+import { Types } from 'mongoose';
 
 @injectable()
 export class ImportCommand implements Command {
@@ -23,56 +24,65 @@ export class ImportCommand implements Command {
   public async execute(...parameters: string[]): Promise<void> {
     const filename = parameters[0]?.trim();
     if (!filename) {
-      this.logger.error('ImportCommand: Filename is required');
+      this.logger.error('ImportCommand: Filename is required. Usage: --import <path-to-file.tsv>');
       return;
     }
 
-    this.logger.info(`ImportCommand: Importing: ${filename}`);
+    this.logger.info(`ImportCommand: Starting import from: ${filename}`);
 
     try {
-      // ✅ Подключение через DatabaseClient (единая точка входа)
       await this.databaseClient.connect();
+      this.logger.info('ImportCommand: Database connection established.');
 
-      const reader = new TSVFileReader(filename, new TSVParser());
+      const reader = new TSVFileReader(filename, new TSVParser(), this.logger);
       const data = await reader.read();
 
       if (!data || data.length === 0) {
-        this.logger.warn('ImportCommand: No records found');
+        this.logger.warn('ImportCommand: No valid records found in the file.');
         return;
       }
 
-      this.logger.info(`ImportCommand: Found ${data.length} record(s)`);
+      this.logger.info(`ImportCommand: Found ${data.length} valid record(s) to process.`);
 
       const defaultUser = await this.getOrCreateDefaultUser();
+
       let count = 0;
       let errors = 0;
 
-      for (const item of data) {
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const recordNumber = i + 1;
+        const offerTitle = typeof item.title === 'string' ? item.title : 'Untitled';
+
         try {
           await this.saveOffer(item, defaultUser._id.toString());
           count++;
         } catch (err) {
           errors++;
-          const msg = err instanceof Error ? err.message : String(err);
+          const errorMessage = err instanceof Error ? err.message : String(err);
           this.logger.error(
-            err instanceof Error ? err : new Error(msg),
-            `ImportCommand: Record ${count + errors} failed`
+            `ImportCommand: Line #${recordNumber + 1} ("${offerTitle}") skipped. Reason: ${errorMessage}`
           );
         }
       }
 
-      this.logger.info(`ImportCommand: Imported: ${count}`);
+      this.logger.info(`ImportCommand: Successfully imported ${count} record(s).`);
+
       if (errors > 0) {
-        this.logger.error(new Error(`${errors} record(s) failed`), 'ImportCommand: Some records failed');
+        this.logger.warn(
+          `ImportCommand: Import finished with warnings. Failed to process ${errors} record(s).`
+        );
+      } else {
+        this.logger.info('ImportCommand: Import completed successfully without errors.');
       }
     } catch (err) {
       this.logger.error(
         err instanceof Error ? err : new Error(String(err)),
-        'ImportCommand: Import failed'
+        'ImportCommand: Critical error during import'
       );
     } finally {
-      // ✅ Отключение через DatabaseClient
       await this.databaseClient.disconnect();
+      this.logger.info('ImportCommand: Database connection closed.');
     }
   }
 
@@ -99,60 +109,55 @@ export class ImportCommand implements Command {
   }
 
   private async saveOffer(item: Record<string, unknown>, userId: string): Promise<void> {
-    let cityName: string;
-    if (typeof item.city === 'object' && item.city !== null) {
-      cityName = String((item.city as Record<string, unknown>).name || 'Paris');
-    } else {
-      cityName = String(item.city || 'Paris');
-    }
-
-    let latitude = 0;
-    let longitude = 0;
-    if (typeof item.location === 'object' && item.location !== null) {
-      const loc = item.location as Record<string, unknown>;
-      latitude = Number(loc.latitude) || 0;
-      longitude = Number(loc.longitude) || 0;
-    } else {
-      latitude = Number(item.latitude) || 0;
-      longitude = Number(item.longitude) || 0;
-    }
-
+    const title = String(item.title || 'Untitled');
+    const description = String(item.description || 'Description is missing in the data');
     const preview = String(item.previewImage || item.preview || 'default.jpg');
-    let images: string[];
-    if (Array.isArray(item.images)) {
-      images = item.images.map(String);
-    } else if (typeof item.images === 'string' && item.images) {
-      images = item.images.split(';');
-    } else {
-      images = [preview];
-    }
 
-    let features: string[];
-    if (Array.isArray(item.features)) {
-      features = item.features.map(String);
-    } else if (typeof item.features === 'string' && item.features) {
-      features = item.features.split(';');
-    } else {
-      features = ['Breakfast', 'Washer', 'Fridge'];
-    }
+    const rawCity = String(item['city.name'] || item.city || 'Paris');
+    const validCities = ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'] as const;
+    const city = validCities.includes(rawCity as typeof validCities[number])
+      ? (rawCity as typeof validCities[number])
+      : 'Paris';
+
+    const rawType = String(item.type || 'apartment').toLowerCase();
+    const validTypes = ['apartment', 'house', 'room', 'hotel'] as const;
+    const type = validTypes.includes(rawType as typeof validTypes[number])
+      ? (rawType as typeof validTypes[number])
+      : 'apartment';
+
+    const images = typeof item.images === 'string'
+      ? item.images.split(';').map((s) => s.trim())
+      : [preview];
+
+    const features = typeof item.features === 'string'
+      ? item.features.split(';').map((s) => s.trim())
+      : ['Breakfast', 'Washer', 'Fridge'];
+
+    const price = Number(item.price) || 1000;
+    const rooms = Number(item.rooms) || 1;
+    const maxPeople = Number(item.maxPeople) || 2;
+    const rating = Number(item.rating) || 3;
+    const commentsCount = Number(item.commentsCount) || 0;
+
+    const latitude = Number(item['location.latitude'] || item.latitude) || 0;
+    const longitude = Number(item['location.longitude'] || item.longitude) || 0;
 
     await OfferModel.create({
-      title: String(item.title || 'Untitled offer'),
-      description: String(item.description || 'No description provided'),
-      createdAt: item.createdAt ? new Date(String(item.createdAt)) : new Date(),
-      city: cityName as 'Paris' | 'Cologne' | 'Brussels' | 'Amsterdam' | 'Hamburg' | 'Dusseldorf',
+      title,
+      description,
+      city,
       preview,
-      images,
+      images: images.slice(0, 6),
       isPremium: item.isPremium === 'true' || item.isPremium === true,
       isFavorite: item.isFavorite === 'true' || item.isFavorite === true,
-      rating: Number(item.rating) || 1,
-      type: String(item.type || 'apartment') as 'apartment' | 'house' | 'room' | 'hotel',
-      rooms: Number(item.rooms) || 1,
-      maxPeople: Number(item.maxPeople) || 1,
-      price: Number(item.price) || 100,
-      features,
-      user: userId,
-      commentsCount: Number(item.commentsCount) || 0,
+      rating,
+      type,
+      rooms,
+      maxPeople,
+      price,
+      features: features.slice(0, 7),
+      user: new Types.ObjectId(userId),
+      commentsCount,
       location: { latitude, longitude },
     });
   }

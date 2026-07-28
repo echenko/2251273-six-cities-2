@@ -57,19 +57,11 @@ export class PinoLogger implements LoggerInterface {
     }
   }
 
-  public error(errorOrMessage: Error | string, ...args: unknown[]): void {
+  public error(errorOrMessage: Error | string, message?: string): void {
     if (errorOrMessage instanceof Error) {
-      if (args.length > 0) {
-        this.logger.error({ err: errorOrMessage, args }, errorOrMessage.message);
-      } else {
-        this.logger.error({ err: errorOrMessage }, errorOrMessage.message);
-      }
+      this.logger.error({ err: errorOrMessage }, message);
     } else {
-      if (args.length > 0) {
-        this.logger.error({ args }, errorOrMessage);
-      } else {
-        this.logger.error(errorOrMessage);
-      }
+      this.logger.error(errorOrMessage);
     }
   }
 }
