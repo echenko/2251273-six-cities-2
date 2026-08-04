@@ -1,51 +1,64 @@
-import { Document, model, Model, Schema, Types } from 'mongoose';
-import { OfferInterface } from './offer.interface.js';
+import { Document, model, Model, Schema } from 'mongoose';
+import { OfferInterface } from './index.js';
 
-export type DocumentOffer = Omit<OfferInterface, 'user'> & Document & {
-  _id: Types.ObjectId;
-  user: Types.ObjectId;
-};
+export type DocumentOffer = OfferInterface & Document;
 
 export const offerSchema = new Schema<DocumentOffer>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     title: {
       type: String,
       required: true,
       minlength: 10,
       maxlength: 100,
     },
-    description: {
-      type: String,
-      required: true,
-      minlength: 20,
-      maxlength: 1024,
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    city: {
-      type: String,
-      required: true,
-      enum: ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'],
-    },
-    preview: {
+    type: {
       type: String,
       required: true,
     },
-    images: {
-      type: [String],
+    price: {
+      type: Number,
       required: true,
-      validate: {
-        validator: (arr: string[]) => arr.length >= 1 && arr.length <= 6,
-        message: 'Images array must contain between 1 and 6 items',
-      },
+      min: 100,
+      max: 100000,
     },
-    isPremium: {
+    previewImage: {
+      type: String,
+      required: true,
+    },
+    cityName: {
+      type: String,
+      required: true,
+    },
+    cityLatitude: {
+      type: Number,
+    },
+    cityLongitude: {
+      type: Number,
+    },
+    cityZoom: {
+      type: Number,
+    },
+    offerLatitude: {
+      type: Number,
+      required: true,
+    },
+    offerLongitude: {
+      type: Number,
+      required: true,
+    },
+    offerZoom: {
+      type: Number,
+    },
+    isFavorite: {
       type: Boolean,
       default: false,
     },
-    isFavorite: {
+    isPremium: {
       type: Boolean,
       default: false,
     },
@@ -54,62 +67,7 @@ export const offerSchema = new Schema<DocumentOffer>(
       default: 0,
       min: 1,
       max: 5,
-    },
-    type: {
-      type: String,
-      required: true,
-      enum: ['apartment', 'house', 'room', 'hotel'],
-    },
-    rooms: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 8,
-    },
-    maxPeople: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 10,
-    },
-    price: {
-      type: Number,
-      required: true,
-      min: 100,
-      max: 100000,
-    },
-    features: {
-      type: [String],
-      required: true,
-      validate: {
-        validator: (arr: string[]) =>
-          arr.every((item) =>
-            [
-              'Breakfast',
-              'Air conditioning',
-              'Laptop friendly workspace',
-              'Baby seat',
-              'Washer',
-              'Towels',
-              'Fridge',
-            ].includes(item)
-          ),
-        message: 'Invalid feature value',
-      },
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    commentsCount: {
-      type: Number,
-      default: 0,
-    },
-    location: {
-      latitude: { type: Number, required: true },
-      longitude: { type: Number, required: true },
-    },
+    }
   },
   {
     timestamps: true,

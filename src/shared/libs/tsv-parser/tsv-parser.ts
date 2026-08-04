@@ -1,4 +1,5 @@
 import { OffersItemType } from '../../types/index.type.js';
+import { OFFER_TYPES, OFFER_CITIES_NAMES, OFFER_CITY_DEFAULT, OFFER_TYPE_DEFAULT } from '../../const.js';
 
 export class TSVParser {
   public parse(line: string): OffersItemType {
@@ -18,11 +19,11 @@ export class TSVParser {
     return {
       id,
       title,
-      type: type as OffersItemType['type'],
+      type : OFFER_TYPES.includes(type) ? type : OFFER_TYPE_DEFAULT,
       price: Number(price),
       previewImage,
       city: {
-        name: cityName,
+        name: OFFER_CITIES_NAMES.includes(cityName) ? cityName : OFFER_CITY_DEFAULT,
         location: {
           latitude: Number(cityLat),
           longitude: Number(cityLng),

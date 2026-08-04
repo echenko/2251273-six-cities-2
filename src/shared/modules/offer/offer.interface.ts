@@ -1,23 +1,17 @@
 export interface OfferInterface {
-  createdAt: Date;
-  updatedAt: Date;
+  id: string;
   title: string;
-  description: string;
-  city: string;
-  preview: string;
-  images: string[];
-  isPremium: boolean;
-  isFavorite: boolean;
-  rating: number;
-  type: 'apartment' | 'house' | 'room' | 'hotel';
-  rooms: number;
-  maxPeople: number;
+  type: string;
   price: number;
-  features: string[];
-  user: string;
-  commentsCount: number;
-  location: {
-    latitude: number;
-    longitude: number;
-  };
+  previewImage: string;
+  cityName: string;
+  cityLatitude: number;
+  cityLongitude: number;
+  cityZoom: number;
+  offerLatitude: number;
+  offerLongitude: number;
+  offerZoom: number;
+  isFavorite: boolean;
+  isPremium: boolean;
+  rating: number;
 }
