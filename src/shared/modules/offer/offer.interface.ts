@@ -1,3 +1,5 @@
+import { Types } from 'mongoose';
+
 export interface OfferInterface {
   id: string;
   title: string;
@@ -17,9 +19,7 @@ export interface OfferInterface {
   description: string;
   bedrooms: number;
   offerGoods: string[];
-  userName: string;
-  userAvatarUrl: string;
-  userIsPro: boolean;
+  user: Types.ObjectId;
   images: string[];
   maxAdults: number;
 }

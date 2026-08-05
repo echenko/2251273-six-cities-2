@@ -1,10 +1,11 @@
 export interface UserInterface {
   createdAt: Date;
   updatedAt: Date;
+  name: string;
   email: string;
-  avatarPath?: string;
-  firstname: string;
-  lastname: string;
-  password?: string;
+  password: string;
+  avatarUrl: string;
   type: 'regular' | 'pro';
 }
+
+export type CreateUser = Omit<UserInterface, 'createdAt' | 'updatedAt'>;

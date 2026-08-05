@@ -1,5 +1,5 @@
 import { Document, model, Model, Schema } from 'mongoose';
-import { OfferInterface } from './index.js';
+import { OfferInterface } from './offer.interface.js';
 
 export type DocumentOffer = OfferInterface & Document;
 
@@ -19,6 +19,7 @@ export const offerSchema = new Schema<DocumentOffer>(
     type: {
       type: String,
       required: true,
+      enum: ['apartment', 'house', 'room', 'hotel'],
     },
     price: {
       type: Number,
@@ -33,15 +34,19 @@ export const offerSchema = new Schema<DocumentOffer>(
     cityName: {
       type: String,
       required: true,
+      enum: ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'],
     },
     cityLatitude: {
       type: Number,
+      required: true,
     },
     cityLongitude: {
       type: Number,
+      required: true,
     },
     cityZoom: {
       type: Number,
+      required: true,
     },
     offerLatitude: {
       type: Number,
@@ -53,6 +58,7 @@ export const offerSchema = new Schema<DocumentOffer>(
     },
     offerZoom: {
       type: Number,
+      required: true,
     },
     isFavorite: {
       type: Boolean,
@@ -64,7 +70,7 @@ export const offerSchema = new Schema<DocumentOffer>(
     },
     rating: {
       type: Number,
-      default: 0,
+      required: true,
       min: 1,
       max: 5,
     },
@@ -84,32 +90,21 @@ export const offerSchema = new Schema<DocumentOffer>(
       type: [String],
       required: true,
     },
-
-    userName: {
-      type: String,
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
     },
-    userAvatarUrl: {
-      type: String,
-      required: true,
-    },
-    userIsPro: {
-      type: Boolean,
-      required: true,
-    },
-
     images: {
       type: [String],
       required: true,
     },
-
     maxAdults: {
       type: Number,
       required: true,
       min: 1,
       max: 10,
     },
-
   },
   {
     timestamps: true,

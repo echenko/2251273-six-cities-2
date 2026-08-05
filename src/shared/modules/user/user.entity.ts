@@ -7,6 +7,12 @@ export type DocumentUser = UserInterface & Document & {
 
 const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
   {
+    name: {
+      type: String,
+      required: true,
+      minlength: 1,
+      maxlength: 50,
+    },
     email: {
       type: String,
       required: true,
@@ -14,27 +20,14 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
       lowercase: true,
       trim: true,
     },
-    avatarPath: {
-      type: String,
-      default: '',
-    },
-    firstname: {
-      type: String,
-      required: true,
-      minlength: 1,
-      maxlength: 15,
-    },
-    lastname: {
-      type: String,
-      required: true,
-      minlength: 1,
-      maxlength: 15,
-    },
     password: {
       type: String,
       required: true,
-      minlength: 6,
       select: false,
+    },
+    avatarUrl: {
+      type: String,
+      default: '',
     },
     type: {
       type: String,
@@ -48,7 +41,7 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
     collection: 'users',
     toJSON: {
       transform: (_doc, ret) => {
-        delete ret.password;
+        delete (ret as { password?: string }).password;
         return ret;
       },
     },

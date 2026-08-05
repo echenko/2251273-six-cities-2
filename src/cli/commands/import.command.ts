@@ -2,6 +2,7 @@ import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
 import { TSVParser } from '../../shared/libs/tsv-parser/index.js';
 import { OfferModel } from '../../shared/modules/offer/offer.entity.js';
+import { UserModel } from '../../shared/modules/user/user.entity.js';
 import { inject, injectable } from 'inversify';
 import { TYPES } from '../../shared/libs/container/index.js';
 import { LoggerInterface } from '../../shared/libs/logger/index.js';
@@ -13,7 +14,7 @@ export class ImportCommand implements Command {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
-  ) { }
+  ) {}
 
   public getName(): string {
     return '--import';
@@ -37,7 +38,7 @@ export class ImportCommand implements Command {
         return;
       }
 
-      let count = 0;
+      let upserted = 0;
       let errors = 0;
 
       for (let i = 0; i < data.length; i++) {
@@ -47,22 +48,27 @@ export class ImportCommand implements Command {
 
         try {
           await this.saveOffer(item);
-          count++;
+          upserted++;
         } catch (err) {
           errors++;
-          this.logger.error(err as Error, `ImportCommand: Line #${recordNumber + 1} ("${offerTitle}") skipped.`);
+          this.logger.error(
+            err as Error,
+            `ImportCommand: Line #${recordNumber} ("${offerTitle}") skipped.`,
+          );
         }
       }
 
-      this.logger.info(`ImportCommand: Successfully imported ${count} record(s).`);
+      this.logger.info(
+        `ImportCommand: Upserted ${upserted} record(s). Errors: ${errors}.`,
+      );
 
-      if (errors > 0) {
-        this.logger.warn(`ImportCommand: Import finished with warnings. Failed to process ${errors} record(s).`);
-      } else {
+      if (errors === 0) {
         this.logger.info('ImportCommand: Import completed successfully without errors.');
+      } else {
+        this.logger.warn(`ImportCommand: Import finished with ${errors} error(s).`);
       }
     } catch (err) {
-      this.logger.error('ImportCommand: Critical error during import');
+      this.logger.error(err as Error, 'ImportCommand: Critical error during import');
     } finally {
       await this.databaseClient.disconnect();
       this.logger.info('ImportCommand: Database connection closed.');
@@ -104,30 +110,60 @@ export class ImportCommand implements Command {
       maxAdults,
     } = item;
 
-    await OfferModel.create({
-      id,
-      title,
-      type,
-      price,
-      previewImage,
-      cityName,
-      cityLatitude,
-      cityLongitude,
-      cityZoom,
-      offerLatitude,
-      offerLongitude,
-      offerZoom,
-      isFavorite,
-      isPremium,
-      rating,
-      description,
-      bedrooms,
-      offerGoods,
-      userName,
-      userAvatarUrl,
-      userIsPro,
-      images,
-      maxAdults,
-    });
+    const user = await this.findOrCreateUser(userName, userAvatarUrl, userIsPro);
+
+    await OfferModel.findOneAndUpdate(
+      { id },
+      {
+        title,
+        type,
+        price,
+        previewImage,
+        cityName,
+        cityLatitude,
+        cityLongitude,
+        cityZoom,
+        offerLatitude,
+        offerLongitude,
+        offerZoom,
+        isFavorite,
+        isPremium,
+        rating,
+        description,
+        bedrooms,
+        offerGoods,
+        user: user._id,
+        images,
+        maxAdults,
+      },
+      {
+        upsert: true,
+        returnDocument: 'after',
+        setDefaultsOnInsert: true,
+      },
+    ).exec();
+  }
+
+  private async findOrCreateUser(
+    name: string,
+    avatarUrl: string,
+    isPro: boolean,
+  ) {
+    const email = `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+
+    let user = await UserModel.findOne({ email }).exec();
+
+    if (!user) {
+      user = await UserModel.create({
+        name,
+        email,
+        password: 'default-password',
+        avatarUrl: avatarUrl || 'https://example.com/default-avatar.jpg',
+        type: isPro ? 'pro' : 'regular',
+      });
+      this.logger.info(`ImportCommand: Created user ${email}`);
+    }
+
+    return user;
   }
 }
