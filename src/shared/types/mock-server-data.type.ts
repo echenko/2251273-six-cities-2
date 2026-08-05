@@ -1,4 +1,4 @@
-import { LocationType } from './index.type.js';
+import { LocationType, UserType } from './index.type.js';
 
 export type MockServerDataType = {
   titles: string[];
@@ -8,4 +8,10 @@ export type MockServerDataType = {
     [key: string]: LocationType;
   };
   previewImages: string[];
+  descriptions: string[];
+  goods: string[];
+  images: string[];
+  users: {
+    [key: string]: UserType;
+  };
 };

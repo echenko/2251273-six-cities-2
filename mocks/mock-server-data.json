@@ -58,12 +58,98 @@
       }
     },
     "previewImages": [
-      "preview-1.jpg",
-      "preview-2.jpg",
-      "preview-3.jpg",
-      "preview-4.jpg",
-      "preview-5.jpg",
-      "preview-6.jpg"
-    ]
+      "https://static.example.com/images/offer/previews/preview-1.jpg",
+      "https://static.example.com/images/offer/previews/preview-2.jpg",
+      "https://static.example.com/images/offer/previews/preview-3.jpg",
+      "https://static.example.com/images/offer/previews/preview-4.jpg",
+      "https://static.example.com/images/offer/previews/preview-5.jpg",
+      "https://static.example.com/images/offer/previews/preview-6.jpg"
+    ],
+    "descriptions": [
+      "Lightful studio with fast Wi-Fi, quiet courtyard and easy access to the city center.",
+      "A spacious house with a fully equipped kitchen, washer and plenty of space for a family stay.",
+      "Bright room in a renovated apartment with quick metro access and comfortable work corner.",
+      "A calm and clean apartment with good transport links and everything needed for a long weekend.",
+      "Compact hotel studio near the central square with daily breakfast and fast check-in.",
+      "Sunny apartment close to the river promenade, ideal for short stays and business trips."
+    ],
+    "goods": [
+      "Breakfast",
+      "Air conditioning",
+      "Laptop friendly workspace",
+      "Baby seat",
+      "Washer",
+      "Towels",
+      "Fridge"
+    ],
+    "images": [
+      "https://static.example.com/images/offer/photos/offer-1.jpg",
+      "https://static.example.com/images/offer/photos/offer-2.jpg",
+      "https://static.example.com/images/offer/photos/offer-3.jpg",
+      "https://static.example.com/images/offer/photos/offer-4.jpg",
+      "https://static.example.com/images/offer/photos/offer-5.jpg",
+      "https://static.example.com/images/offer/photos/offer-6.jpg",
+      "https://static.example.com/images/offer/photos/offer-7.jpg",
+      "https://static.example.com/images/offer/photos/offer-8.jpg",
+      "https://static.example.com/images/offer/photos/offer-9.jpg"
+    ],
+    "users": {
+      "Maria Petrova": {
+        "name": "Maria Petrova",
+        "email": "maria.pet@example.com",
+        "password": "123456",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-1.jpg",
+        "isPro": true
+      },
+      "Alex Ivanov": {
+        "name": "Alex Ivanov",
+        "email": "alex.ivanov@example.com",
+        "password": "1234567",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-2.jpg",
+        "isPro": false
+      },
+      "Sophie Martin": {
+        "name": "Sophie Martin",
+        "email": "sophie.martin@example.com",
+        "password": "1234568",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-3.jpg",
+        "isPro": true
+      },
+      "Jonas Keller": {
+        "name": "Jonas Keller",
+        "email": "jonas.keller@example.com",
+        "password": "1234569",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-4.jpg",
+        "isPro": false
+      },
+      "Luc Dupont": {
+        "name": "Luc Dupont",
+        "email": "luc.dupont@example.com",
+        "password": "1234560",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-5.jpg",
+        "isPro": true
+      },
+      "Nina Vogt": {
+        "name": "Nina Vogt",
+        "email": "nina.vogt@example.com",
+        "password": "1234561",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-6.jpg",
+        "isPro": false
+      },
+      "Max Schaefer": {
+        "name": "Max Schaefer",
+        "email": "max.schaefer@example.com",
+        "password": "1234562",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-7.jpg",
+        "isPro": true
+      },
+      "Emma Laurent": {
+        "name": "Emma Laurent",
+        "email": "emma.laurent@example.com",
+        "password": "1234563",
+        "avatarUrl": "https://static.example.com/images/avatar/avatar-8.jpg",
+        "isPro": false
+      }
+    }
   }
 }

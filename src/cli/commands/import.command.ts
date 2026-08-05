@@ -13,7 +13,7 @@ export class ImportCommand implements Command {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
-  ) {}
+  ) { }
 
   public getName(): string {
     return '--import';
@@ -92,8 +92,17 @@ export class ImportCommand implements Command {
       isFavorite,
       isPremium,
       rating,
+      description,
+      bedrooms,
+      goods: offerGoods,
+      host: {
+        name: userName,
+        avatarUrl: userAvatarUrl,
+        isPro: userIsPro,
+      },
+      images,
+      maxAdults,
     } = item;
-
 
     await OfferModel.create({
       id,
@@ -111,6 +120,14 @@ export class ImportCommand implements Command {
       isFavorite,
       isPremium,
       rating,
+      description,
+      bedrooms,
+      offerGoods,
+      userName,
+      userAvatarUrl,
+      userIsPro,
+      images,
+      maxAdults,
     });
   }
 }

@@ -14,4 +14,12 @@ export interface OfferInterface {
   isFavorite: boolean;
   isPremium: boolean;
   rating: number;
+  description: string;
+  bedrooms: number;
+  offerGoods: string[];
+  userName: string;
+  userAvatarUrl: string;
+  userIsPro: boolean;
+  images: string[];
+  maxAdults: number;
 }

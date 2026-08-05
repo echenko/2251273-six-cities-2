@@ -67,7 +67,49 @@ export const offerSchema = new Schema<DocumentOffer>(
       default: 0,
       min: 1,
       max: 5,
-    }
+    },
+    description: {
+      type: String,
+      required: true,
+      minlength: 20,
+      maxlength: 1024,
+    },
+    bedrooms: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 8,
+    },
+    offerGoods: {
+      type: [String],
+      required: true,
+    },
+
+    userName: {
+      type: String,
+      required: true,
+    },
+    userAvatarUrl: {
+      type: String,
+      required: true,
+    },
+    userIsPro: {
+      type: Boolean,
+      required: true,
+    },
+
+    images: {
+      type: [String],
+      required: true,
+    },
+
+    maxAdults: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 10,
+    },
+
   },
   {
     timestamps: true,
