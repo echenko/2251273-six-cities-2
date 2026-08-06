@@ -1,12 +1,17 @@
 import { Command } from './commands/command.interface.js';
 import { CommandParser } from './command.parser.js';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../shared/libs/container/container.types.js';
+import { LoggerInterface } from '../shared/libs/logger/logger.interface.js';
 
 type CommandCollection = Record<string, Command>;
 
-export class CLIApplication {
+@injectable()
+export class CliApplication {
   private commands: CommandCollection = {};
 
   constructor(
+    @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     private readonly defaultCommand: string = '--help',
   ) {}
 
@@ -41,7 +46,7 @@ export class CLIApplication {
     return command;
   }
 
-  public processCommand(argv: string[]): void {
+  public async processCommand(argv: string[]): Promise<void> {
     const parsedCommand = CommandParser.parse(argv);
     const commandNames = Object.keys(parsedCommand);
 
@@ -50,13 +55,12 @@ export class CLIApplication {
     const commandArguments = parsedCommand[commandName] ?? [];
 
     try {
-      command.execute(...commandArguments);
+      await command.execute(...commandArguments);
     } catch (error: unknown) {
-      console.error(`Error executing command "${command.getName()}":`);
-
-      if (error instanceof Error) {
-        console.error(error.message);
-      }
+      this.logger.error(
+        error as Error,
+        `CLIApplication: Error executing command "${command.getName()}"`
+      );
     }
   }
 }

@@ -1,6 +1,7 @@
-function generateRandomValue(min: number, max: number, numAfterDigit: number = 0): number {
+function getRandomValue(min: number, max: number, numAfterDigit: number = 0): number {
   return Number((Math.random() * (max - min) + min).toFixed(numAfterDigit));
 }
+
 
 function getRandomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
@@ -40,7 +41,7 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
 }
 
 export {
-  generateRandomValue,
+  getRandomValue,
   getRandomItem,
   getRandomItems,
   getNestedValue,

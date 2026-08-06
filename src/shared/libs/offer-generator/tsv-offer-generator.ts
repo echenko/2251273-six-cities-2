@@ -1,31 +1,62 @@
 import { OfferGenerator } from './offer-generator.interface.js';
 import { MockServerDataType, OffersItemType } from './../../types/index.type.js';
 import { v4 } from 'uuid';
-import { generateRandomValue, getRandomItem } from './../../helpers/index.js';
-import { OFFER_PRICE, OFFER_RATING } from './../../const.js';
+import {
+  getRandomValue,
+  getRandomItem,
+  getRandomItems,
+} from './../../helpers/index.js';
+import {
+  OFFER_PRICE,
+  OFFER_RATING,
+  OFFER_BEDROOMS,
+  OFFER_ADULTS,
+  OFFER_GOODS,
+  OFFER_IMAGES,
+} from './../../const.js';
 import { TSVFormatter } from '../tsv-formatter/tsv-formatter.js';
 
 export class TSVOfferGenerator implements OfferGenerator {
-  constructor(private readonly mockData: MockServerDataType) { }
+  private readonly formatter = new TSVFormatter();
 
-  // Генерируем оффер
-  generate(): string {
-    const { titles, types, cites, locations, previewImages } = this.mockData;
+  constructor(private readonly mockData: MockServerDataType) {}
+
+  public generate(): string {
+    const {
+      titles,
+      types,
+      cites,
+      locations,
+      previewImages,
+      descriptions,
+      goods,
+      images,
+      users,
+    } = this.mockData;
 
     const id = v4();
     const title = getRandomItem(titles);
     const type = getRandomItem(types);
     const cityName = getRandomItem(cites);
-
-    const cityLocation = locations[cityName] ?? { latitude: 0, longitude: 0, zoom: 0 };
     const previewImage = getRandomItem(previewImages);
 
-    const offerLocation = locations[cityName] ?? { latitude: 0, longitude: 0, zoom: 0 };
+    const location = locations[cityName] ?? {
+      latitude: 0,
+      longitude: 0,
+      zoom: 0,
+    };
 
-    const price = generateRandomValue(OFFER_PRICE.min, OFFER_PRICE.max);
-    const rating = Number(generateRandomValue(OFFER_RATING.min, OFFER_RATING.max, 1).toFixed(1));
+    const price = getRandomValue(OFFER_PRICE.min, OFFER_PRICE.max);
+    const rating = Number(getRandomValue(OFFER_RATING.min, OFFER_RATING.max, 1).toFixed(1));
     const isFavorite = getRandomItem([true, false]);
-    const isPremium = (getRandomItem([true, false]));
+    const isPremium = getRandomItem([true, false]);
+    const description = getRandomItem(descriptions);
+    const bedrooms = getRandomValue(OFFER_BEDROOMS.min, OFFER_BEDROOMS.max);
+    const offerGoods = getRandomItems(goods, getRandomValue(OFFER_GOODS.min, OFFER_GOODS.max), true);
+    const offerImages = getRandomItems(images, getRandomValue(OFFER_IMAGES.min, OFFER_IMAGES.max), true);
+    const userList = Object.values(users);
+    const user = getRandomItem(userList);
+    const maxAdults = getRandomValue(OFFER_ADULTS.min, OFFER_ADULTS.max);
 
     const offer: OffersItemType = {
       id,
@@ -36,21 +67,31 @@ export class TSVOfferGenerator implements OfferGenerator {
       city: {
         name: cityName,
         location: {
-          latitude: cityLocation.latitude,
-          longitude: cityLocation.longitude,
-          zoom: cityLocation.zoom,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          zoom: location.zoom,
         },
       },
       location: {
-        latitude: offerLocation.latitude,
-        longitude: offerLocation.longitude,
-        zoom: offerLocation.zoom,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        zoom: location.zoom,
       },
       isFavorite,
       isPremium,
       rating,
+      description,
+      bedrooms,
+      goods: offerGoods,
+      host: {
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+        isPro: user.isPro,
+      },
+      images: offerImages,
+      maxAdults: maxAdults,
     };
-    const offerFormatter = new TSVFormatter().format(offer);
-    return offerFormatter;
+
+    return this.formatter.format(offer);
   }
 }

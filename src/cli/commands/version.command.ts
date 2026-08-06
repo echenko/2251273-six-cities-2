@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Command } from './command.interface.js';
-import chalk from 'chalk';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../shared/libs/container/index.js';
+import { LoggerInterface } from '../../shared/libs/logger/index.js';
 
 type PackageJSONConfig = {
   version: string;
@@ -17,8 +19,10 @@ function isPackageJSONConfig(value: unknown): value is PackageJSONConfig {
   );
 }
 
+@injectable()
 export class VersionCommand implements Command {
   constructor(
+    @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     private readonly filePath: string = './package.json',
   ) {}
 
@@ -28,6 +32,7 @@ export class VersionCommand implements Command {
     const importedContent: unknown = JSON.parse(fileContent);
 
     if (!isPackageJSONConfig(importedContent)) {
+      this.logger.error('Failed to parse json content.');
       throw new Error('Failed to parse json content.');
     }
 
@@ -38,35 +43,16 @@ export class VersionCommand implements Command {
     return '--version';
   }
 
-  execute(): void {
+  async execute(): Promise<void> {
     try {
       const version = this.readVersion();
-
-      console.info(
-        chalk.cyan('📦 Version:'),
-        chalk.bold.green(version),
-      );
-      console.info(
-        chalk.gray(`   from ${chalk.underline(this.filePath)}`),
-      );
+      this.logger.info(`Version: ${version}`);
     } catch (error: unknown) {
-      console.error(
-        chalk.bgRed.white.bold(' ❌ ERROR '),
-        chalk.red('Failed to read version from'),
-        chalk.underline.yellow(this.filePath),
-      );
+      this.logger.error(error as Error, 'VersionCommand: Failed to read version from package.json');
 
       if (error instanceof Error) {
-        console.error(
-          chalk.red('   Details:'),
-          chalk.gray(error.message),
-        );
+        this.logger.error(error, 'VersionCommand: Failed to read version from package.json');
       }
-
-      console.error(
-        chalk.yellow('💡 Hint:'),
-        chalk.gray('Make sure you are running the command from the project root directory.'),
-      );
     }
   }
 }

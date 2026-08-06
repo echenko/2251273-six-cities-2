@@ -1,45 +1,169 @@
 import { Command } from './command.interface.js';
 import { TSVFileReader } from '../../shared/libs/file-reader/index.js';
 import { TSVParser } from '../../shared/libs/tsv-parser/index.js';
-import chalk from 'chalk';
+import { OfferModel } from '../../shared/modules/offer/offer.entity.js';
+import { UserModel } from '../../shared/modules/user/user.entity.js';
+import { inject, injectable } from 'inversify';
+import { TYPES } from '../../shared/libs/container/index.js';
+import { LoggerInterface } from '../../shared/libs/logger/index.js';
+import { DatabaseClientInterface } from '../../shared/libs/database/index.js';
+import { OffersItemType } from '../../shared/types/index.type.js';
 
+@injectable()
 export class ImportCommand implements Command {
-  // Получение имени команды.
+  constructor(
+    @inject(TYPES.Logger) private readonly logger: LoggerInterface,
+    @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
+  ) {}
+
   public getName(): string {
     return '--import';
   }
 
-  // Выполнение команды.
   public async execute(...parameters: string[]): Promise<void> {
-    // Получение имени файла.(первый параметр, путь к файлу)
     const filename = parameters[0]?.trim();
-
-    // Проверка наличия имени файла.
     if (!filename) {
-      console.error(chalk.red('❌ ERROR: Filename is required'));
+      this.logger.error('ImportCommand: Filename is required. Usage: --import <path-to-file.tsv>');
       return;
     }
 
-    // Создание экземпляра класса TSVFileReader для чтения файла.
-    const reader = new TSVFileReader(filename, new TSVParser());
-    console.info(chalk.cyan(`📥 Importing: ${filename}\n`));
-
     try {
-      // Чтение данных из файла. (из экземпляра класса TSVFileReader)
-      const data = await reader.read();
-      let count = 0;
+      await this.databaseClient.connect();
 
-      // Вывод данных в консоль. (из массива data)
-      for (const item of data) {
-        count++;
-        console.dir(item, { colors: true, depth: 1 });
+      const reader = new TSVFileReader(filename, new TSVParser(), this.logger);
+      const data = await reader.read();
+
+      if (!data || data.length === 0) {
+        this.logger.warn('ImportCommand: No valid records found in the file.');
+        return;
       }
 
-      console.info(chalk.green(`\n✅ Success. Records loaded: ${count}`));
+      let upserted = 0;
+      let errors = 0;
+
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const recordNumber = i + 1;
+        const offerTitle = typeof item.title === 'string' ? item.title : 'Untitled';
+
+        try {
+          await this.saveOffer(item);
+          upserted++;
+        } catch (err) {
+          errors++;
+          this.logger.error(
+            err as Error,
+            `ImportCommand: Line #${recordNumber} ("${offerTitle}") skipped.`,
+          );
+        }
+      }
+
+      this.logger.info(
+        `ImportCommand: Upserted ${upserted} record(s). Errors: ${errors}.`,
+      );
+
+      if (errors === 0) {
+        this.logger.info('ImportCommand: Import completed successfully without errors.');
+      } else {
+        this.logger.warn(`ImportCommand: Import finished with ${errors} error(s).`);
+      }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(chalk.red(`\n❌ ERROR: Can't import ${filename}`));
-      console.error(chalk.gray(`   Details: ${message}`));
+      this.logger.error(err as Error, 'ImportCommand: Critical error during import');
+    } finally {
+      await this.databaseClient.disconnect();
+      this.logger.info('ImportCommand: Database connection closed.');
     }
+  }
+
+  private async saveOffer(item: OffersItemType): Promise<void> {
+    const {
+      id,
+      title,
+      type,
+      price,
+      previewImage,
+      city: {
+        name: cityName,
+        location: {
+          latitude: cityLatitude,
+          longitude: cityLongitude,
+          zoom: cityZoom,
+        },
+      },
+      location: {
+        latitude: offerLatitude,
+        longitude: offerLongitude,
+        zoom: offerZoom,
+      },
+      isFavorite,
+      isPremium,
+      rating,
+      description,
+      bedrooms,
+      goods: offerGoods,
+      host: {
+        name: userName,
+        avatarUrl: userAvatarUrl,
+        isPro: userIsPro,
+      },
+      images,
+      maxAdults,
+    } = item;
+
+    const user = await this.findOrCreateUser(userName, userAvatarUrl, userIsPro);
+
+    await OfferModel.findOneAndUpdate(
+      { id },
+      {
+        title,
+        type,
+        price,
+        previewImage,
+        cityName,
+        cityLatitude,
+        cityLongitude,
+        cityZoom,
+        offerLatitude,
+        offerLongitude,
+        offerZoom,
+        isFavorite,
+        isPremium,
+        rating,
+        description,
+        bedrooms,
+        offerGoods,
+        user: user._id,
+        images,
+        maxAdults,
+      },
+      {
+        upsert: true,
+        returnDocument: 'after',
+        setDefaultsOnInsert: true,
+      },
+    ).exec();
+  }
+
+  private async findOrCreateUser(
+    name: string,
+    avatarUrl: string,
+    isPro: boolean,
+  ) {
+    const email = `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+
+    let user = await UserModel.findOne({ email }).exec();
+
+    if (!user) {
+      user = await UserModel.create({
+        name,
+        email,
+        password: 'default-password',
+        avatarUrl: avatarUrl || 'https://example.com/default-avatar.jpg',
+        type: isPro ? 'pro' : 'regular',
+      });
+      this.logger.info(`ImportCommand: Created user ${email}`);
+    }
+
+    return user;
   }
 }

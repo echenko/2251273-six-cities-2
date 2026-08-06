@@ -1,12 +1,40 @@
 const OFFER_PRICE = {
-  min: 0,
-  max: 1000,
+  min: 100,
+  max: 100000,
 };
 
 const OFFER_RATING = {
   min: 1,
   max: 5,
 };
+
+const OFFER_BEDROOMS = {
+  min: 1,
+  max: 6,
+};
+
+const OFFER_ADULTS = {
+  min: 1,
+  max: 8,
+};
+
+const OFFER_GOODS = {
+  min: 1,
+  max: 6,
+};
+
+const OFFER_IMAGES = {
+  min: 1,
+  max: 8,
+};
+
+const OFFER_TYPES = ['apartment', 'house','room','hotel'];
+
+const OFFER_TYPE_DEFAULT = OFFER_TYPES[0];
+
+const OFFER_CITIES_NAMES = ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'];
+
+const OFFER_CITY_DEFAULT = OFFER_CITIES_NAMES[0];
 
 const TSV_FIELDS_OFFER = [
   'id',
@@ -24,10 +52,26 @@ const TSV_FIELDS_OFFER = [
   'isFavorite',
   'isPremium',
   'rating',
+  'description',
+  'bedrooms',
+  'goods',
+  'host.name',
+  'host.avatarUrl',
+  'host.isPro',
+  'images',
+  'maxAdults',
 ];
 
 export {
   OFFER_PRICE,
   OFFER_RATING,
+  OFFER_BEDROOMS,
+  OFFER_ADULTS,
+  OFFER_GOODS,
+  OFFER_IMAGES,
+  OFFER_TYPES,
+  OFFER_TYPE_DEFAULT,
+  OFFER_CITIES_NAMES,
+  OFFER_CITY_DEFAULT,
   TSV_FIELDS_OFFER,
 };
