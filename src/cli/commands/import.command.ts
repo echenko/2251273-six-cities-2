@@ -8,13 +8,15 @@ import { TYPES } from '../../shared/libs/container/index.js';
 import { LoggerInterface } from '../../shared/libs/logger/index.js';
 import { DatabaseClientInterface } from '../../shared/libs/database/index.js';
 import { OffersItemType } from '../../shared/types/index.type.js';
+import { CityName, CreateOffer, OfferType } from '../../shared/modules/offer/index.js';
+import { hashPassword } from './../../shared/helpers/password.helper.js';
 
 @injectable()
 export class ImportCommand implements Command {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
-  ) {}
+  ) { }
 
   public getName(): string {
     return '--import';
@@ -77,7 +79,6 @@ export class ImportCommand implements Command {
 
   private async saveOffer(item: OffersItemType): Promise<void> {
     const {
-      id,
       title,
       type,
       price,
@@ -110,38 +111,36 @@ export class ImportCommand implements Command {
       maxAdults,
     } = item;
 
-    const user = await this.findOrCreateUser(userName, userAvatarUrl, userIsPro);
+    const user = await this.findOrCreateUser(
+      userName,
+      userAvatarUrl,
+      userIsPro,
+    );
 
-    await OfferModel.findOneAndUpdate(
-      { id },
-      {
-        title,
-        type,
-        price,
-        previewImage,
-        cityName,
-        cityLatitude,
-        cityLongitude,
-        cityZoom,
-        offerLatitude,
-        offerLongitude,
-        offerZoom,
-        isFavorite,
-        isPremium,
-        rating,
-        description,
-        bedrooms,
-        offerGoods,
-        user: user._id,
-        images,
-        maxAdults,
-      },
-      {
-        upsert: true,
-        returnDocument: 'after',
-        setDefaultsOnInsert: true,
-      },
-    ).exec();
+    const offerData: CreateOffer = {
+      title,
+      type: type as OfferType,
+      price,
+      previewImage,
+      cityName: cityName as CityName,
+      cityLatitude,
+      cityLongitude,
+      cityZoom,
+      offerLatitude,
+      offerLongitude,
+      offerZoom,
+      isFavorite,
+      isPremium,
+      rating,
+      description,
+      bedrooms,
+      offerGoods,
+      user: user._id,
+      images,
+      maxAdults,
+    };
+
+    await OfferModel.create(offerData);
   }
 
   private async findOrCreateUser(
@@ -154,10 +153,12 @@ export class ImportCommand implements Command {
     let user = await UserModel.findOne({ email }).exec();
 
     if (!user) {
+      const hashedPassword = await hashPassword('default-password');
+
       user = await UserModel.create({
         name,
         email,
-        password: 'default-password',
+        password: hashedPassword,
         avatarUrl: avatarUrl || 'https://example.com/default-avatar.jpg',
         type: isPro ? 'pro' : 'regular',
       });

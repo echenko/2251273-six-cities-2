@@ -16,7 +16,6 @@ export class TSVParser {
     }
 
     const [
-      id,
       title,
       type,
       price,
@@ -42,7 +41,6 @@ export class TSVParser {
     ] = columns;
 
     return {
-      id,
       title,
       type: (OFFER_TYPES as readonly string[]).includes(type)
         ? (type as OffersItemType['type'])

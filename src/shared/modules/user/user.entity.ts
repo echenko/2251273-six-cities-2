@@ -1,12 +1,20 @@
 import { Document, model, Model, Schema, Types } from 'mongoose';
+import { generateId } from './../../helpers/index.js';
 import { UserInterface } from './user.interface.js';
 
-export type DocumentUser = UserInterface & Document & {
-  _id: Types.ObjectId;
-};
+export type DocumentUser = UserInterface &
+  Document & {
+    _id: Types.ObjectId;
+  };
 
 const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
   {
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+      default: () => generateId(),
+    },
     name: {
       type: String,
       required: true,
@@ -37,15 +45,24 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
     },
   },
   {
+    id: false,
     timestamps: true,
     collection: 'users',
     toJSON: {
       transform: (_doc, ret) => {
-        delete (ret as { password?: string }).password;
-        return ret;
+        const result = ret as Record<string, unknown>;
+
+        delete result.password;
+        delete result._id;
+        delete result.__v;
+
+        return result;
       },
     },
   }
 );
 
-export const UserModel: Model<DocumentUser> = model<DocumentUser>('User', userSchema);
+export const UserModel: Model<DocumentUser> = model<DocumentUser>(
+  'User',
+  userSchema,
+);

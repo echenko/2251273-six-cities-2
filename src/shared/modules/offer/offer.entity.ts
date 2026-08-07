@@ -1,7 +1,11 @@
-import { Document, model, Model, Schema } from 'mongoose';
+import { Document, model, Model, Schema, Types } from 'mongoose';
+import { generateId } from './../../helpers/index.js';
 import { OfferInterface } from './offer.interface.js';
 
-export type DocumentOffer = OfferInterface & Document;
+export type DocumentOffer = OfferInterface &
+  Document & {
+    _id: Types.ObjectId;
+  };
 
 export const offerSchema = new Schema<DocumentOffer>(
   {
@@ -9,6 +13,7 @@ export const offerSchema = new Schema<DocumentOffer>(
       type: String,
       required: true,
       unique: true,
+      default: () => generateId(),
     },
     title: {
       type: String,
@@ -34,7 +39,14 @@ export const offerSchema = new Schema<DocumentOffer>(
     cityName: {
       type: String,
       required: true,
-      enum: ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'],
+      enum: [
+        'Paris',
+        'Cologne',
+        'Brussels',
+        'Amsterdam',
+        'Hamburg',
+        'Dusseldorf',
+      ],
     },
     cityLatitude: {
       type: Number,
@@ -107,9 +119,23 @@ export const offerSchema = new Schema<DocumentOffer>(
     },
   },
   {
+    id: false,
     timestamps: true,
     collection: 'offers',
+    toJSON: {
+      transform: (_doc, ret) => {
+        const result = ret as Record<string, unknown>;
+
+        delete result._id;
+        delete result.__v;
+
+        return result;
+      },
+    },
   }
 );
 
-export const OfferModel: Model<DocumentOffer> = model<DocumentOffer>('Offer', offerSchema);
+export const OfferModel: Model<DocumentOffer> = model<DocumentOffer>(
+  'Offer',
+  offerSchema,
+);
