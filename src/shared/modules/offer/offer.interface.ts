@@ -1,7 +1,6 @@
 import { Types } from 'mongoose';
 
 export type OfferType = 'apartment' | 'house' | 'room' | 'hotel';
-
 export type CityName =
   | 'Paris'
   | 'Cologne'
@@ -34,11 +33,12 @@ export interface OfferInterface {
   user: Types.ObjectId;
   images: string[];
   maxAdults: number;
+  commentsCount: number;
 }
 
 export type CreateOffer = Omit<
   OfferInterface,
-  'id' | 'createdAt' | 'updatedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'commentsCount'
 >;
 
 export type CreateOfferInput = Omit<CreateOffer, 'user'>;

@@ -117,6 +117,10 @@ export const offerSchema = new Schema<DocumentOffer>(
       min: 1,
       max: 10,
     },
+    commentsCount: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     id: false,
