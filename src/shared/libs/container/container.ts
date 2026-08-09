@@ -13,6 +13,7 @@ import {
   GenerateCommand
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
+import { CommentRepository, DefaultCommentRepository } from '../../modules/comment/index.js';
 
 const container = new Container();
 
@@ -29,6 +30,7 @@ container.bind<DatabaseClientInterface>(TYPES.DatabaseClient).to(MongoClient).in
 // Репозитории
 container.bind<UserRepository>(TYPES.UserRepository).to(DefaultUserRepository);
 container.bind<OfferRepository>(TYPES.OfferRepository).to(DefaultOfferRepository);
+container.bind<CommentRepository>(TYPES.CommentRepository).to(DefaultCommentRepository);
 
 // CLI
 container.bind<CliApplication>(TYPES.CLIApplication).to(CliApplication);

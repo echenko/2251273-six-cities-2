@@ -10,4 +10,5 @@ export const TYPES = {
   VersionCommand: Symbol.for('VersionCommand'),
   ImportCommand: Symbol.for('ImportCommand'),
   GenerateCommand: Symbol.for('GenerateCommand'),
+  CommentRepository: Symbol.for('CommentRepository'),
 };
