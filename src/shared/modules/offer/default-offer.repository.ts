@@ -80,11 +80,9 @@ export class DefaultOfferRepository implements OfferRepository {
     this.logger.debug(
       `DefaultOfferRepository: Updating stats for offer ${internalId} (rating: ${rating}, comments: ${commentsCount})`,
     );
-
     if (!Types.ObjectId.isValid(internalId)) {
       return null;
     }
-
     return OfferModel.findByIdAndUpdate(
       internalId,
       { rating, commentsCount },

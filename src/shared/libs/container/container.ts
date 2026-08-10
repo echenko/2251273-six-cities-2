@@ -14,6 +14,9 @@ import {
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
 import { CommentRepository, CommentService, DefaultCommentRepository, DefaultCommentService } from '../../modules/comment/index.js';
+import { DefaultUserService, UserService } from '../../modules/user/user.service.js';
+import { DefaultOfferService, OfferService } from '../../modules/offer/offer.service.js';
+import { AuthService, DefaultAuthService } from '../../modules/auth/auth.service.js';
 
 const container = new Container();
 
@@ -41,5 +44,8 @@ container.bind<GenerateCommand>(TYPES.GenerateCommand).to(GenerateCommand);
 
 // Сервисы
 container.bind<CommentService>(TYPES.CommentService).to(DefaultCommentService).inSingletonScope();
+container.bind<UserService>(TYPES.UserService).to(DefaultUserService).inSingletonScope();
+container.bind<OfferService>(TYPES.OfferService).to(DefaultOfferService).inSingletonScope();
+container.bind<AuthService>(TYPES.AuthService).to(DefaultAuthService).inSingletonScope();
 
 export { container };
