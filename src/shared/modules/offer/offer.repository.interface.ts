@@ -8,5 +8,14 @@ export interface OfferRepository extends Repository<DocumentOffer> {
   findAll(limit?: number): Promise<DocumentOffer[]>;
   deleteById(id: string): Promise<boolean>;
   create(dto: CreateOffer): Promise<DocumentOffer>;
-  updateStats(id: string, rating: number, commentsCount: number): Promise<DocumentOffer | null>;
+  updateStats(
+    id: string,
+    rating: number,
+    commentsCount: number
+  ): Promise<DocumentOffer | null>;
+  updateStats(
+    internalId: string,
+    rating: number,
+    commentsCount: number,
+  ): Promise<DocumentOffer | null>;
 }

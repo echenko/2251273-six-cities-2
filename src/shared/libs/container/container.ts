@@ -13,7 +13,7 @@ import {
   GenerateCommand
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
-import { CommentRepository, DefaultCommentRepository } from '../../modules/comment/index.js';
+import { CommentRepository, CommentService, DefaultCommentRepository, DefaultCommentService } from '../../modules/comment/index.js';
 
 const container = new Container();
 
@@ -38,5 +38,8 @@ container.bind<HelpCommand>(TYPES.HelpCommand).to(HelpCommand);
 container.bind<VersionCommand>(TYPES.VersionCommand).to(VersionCommand);
 container.bind<ImportCommand>(TYPES.ImportCommand).to(ImportCommand);
 container.bind<GenerateCommand>(TYPES.GenerateCommand).to(GenerateCommand);
+
+// Сервисы
+container.bind<CommentService>(TYPES.CommentService).to(DefaultCommentService).inSingletonScope();
 
 export { container };

@@ -1,4 +1,5 @@
 import { injectable, inject } from 'inversify';
+import { Types } from 'mongoose';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { OfferRepository } from './offer.repository.interface.js';
@@ -72,15 +73,20 @@ export class DefaultOfferRepository implements OfferRepository {
   }
 
   public async updateStats(
-    id: string,
+    internalId: string,
     rating: number,
     commentsCount: number,
   ): Promise<DocumentOffer | null> {
     this.logger.debug(
-      `DefaultOfferRepository: Updating stats for offer ${id} (rating: ${rating}, comments: ${commentsCount})`,
+      `DefaultOfferRepository: Updating stats for offer ${internalId} (rating: ${rating}, comments: ${commentsCount})`,
     );
-    return OfferModel.findOneAndUpdate(
-      { id },
+
+    if (!Types.ObjectId.isValid(internalId)) {
+      return null;
+    }
+
+    return OfferModel.findByIdAndUpdate(
+      internalId,
       { rating, commentsCount },
       { new: true },
     ).exec();
