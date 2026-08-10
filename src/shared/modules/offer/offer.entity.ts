@@ -82,8 +82,7 @@ export const offerSchema = new Schema<DocumentOffer>(
     },
     rating: {
       type: Number,
-      required: true,
-      min: 1,
+      min: 0,
       max: 5,
     },
     description: {
@@ -139,7 +138,4 @@ export const offerSchema = new Schema<DocumentOffer>(
   }
 );
 
-export const OfferModel: Model<DocumentOffer> = model<DocumentOffer>(
-  'Offer',
-  offerSchema,
-);
+export const OfferModel: Model<DocumentOffer> = model<DocumentOffer>('Offer', offerSchema,);

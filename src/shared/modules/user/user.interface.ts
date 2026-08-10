@@ -11,7 +11,4 @@ export interface UserInterface {
   type: UserType;
 }
 
-export type CreateUser = Omit<
-  UserInterface,
-  'id' | 'createdAt' | 'updatedAt'
->;
+export type CreateUser = Omit<UserInterface, 'id' | 'createdAt' | 'updatedAt'>;

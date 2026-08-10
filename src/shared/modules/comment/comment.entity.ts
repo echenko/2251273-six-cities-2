@@ -53,7 +53,4 @@ const commentSchema: Schema<DocumentComment> = new Schema<DocumentComment>(
   },
 );
 
-export const CommentModel: Model<DocumentComment> = model<DocumentComment>(
-  'Comment',
-  commentSchema,
-);
+export const CommentModel: Model<DocumentComment> = model<DocumentComment>('Comment', commentSchema,);

@@ -1,5 +1,4 @@
 import { injectable, inject } from 'inversify';
-import { Types } from 'mongoose';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { OfferRepository } from './offer.repository.interface.js';

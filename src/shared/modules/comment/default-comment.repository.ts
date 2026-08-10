@@ -9,7 +9,7 @@ import { CreateComment } from './comment.interface.js';
 export class DefaultCommentRepository implements CommentRepository {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
-  ) {}
+  ) { }
 
   public async create(dto: CreateComment): Promise<DocumentComment> {
     this.logger.info('DefaultCommentRepository: Creating new comment');
@@ -23,6 +23,7 @@ export class DefaultCommentRepository implements CommentRepository {
     );
     return CommentModel.find({ offer: offerId })
       .populate('user')
+      .populate('offer')
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -31,7 +32,10 @@ export class DefaultCommentRepository implements CommentRepository {
     this.logger.debug(
       `DefaultCommentRepository: Searching comment by ID ${id}`,
     );
-    return CommentModel.findOne({ id }).populate('user').exec();
+    return CommentModel.findOne({ id })
+      .populate('user')
+      .populate('offer')
+      .exec();
   }
 
   public async deleteById(id: string): Promise<boolean> {

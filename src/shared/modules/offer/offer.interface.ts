@@ -36,9 +36,6 @@ export interface OfferInterface {
   commentsCount: number;
 }
 
-export type CreateOffer = Omit<
-  OfferInterface,
-  'id' | 'createdAt' | 'updatedAt' | 'commentsCount'
->;
+export type CreateOffer = Omit<OfferInterface, 'id' | 'createdAt' | 'updatedAt' | 'commentsCount'>;
 
 export type CreateOfferInput = Omit<CreateOffer, 'user'>;

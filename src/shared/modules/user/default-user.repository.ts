@@ -12,18 +12,12 @@ export class DefaultUserRepository implements UserRepository {
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
   ) {}
 
-  /**
-   * Ищем пользователя по публичному строковому id.
-   */
   public async findById(id: string): Promise<DocumentUser | null> {
     this.logger.debug(`DefaultUserRepository: Searching for user by ID ${id}`);
 
     return UserModel.findOne({ id }).exec();
   }
 
-  /**
-   * Ищем пользователя по внутреннему Mongo _id.
-   */
   public async findByInternalId(
     internalId: string,
   ): Promise<DocumentUser | null> {

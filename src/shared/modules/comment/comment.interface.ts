@@ -10,9 +10,6 @@ export interface CommentInterface {
   offer: Types.ObjectId;
 }
 
-export type CreateComment = Omit<
-  CommentInterface,
-  'id' | 'createdAt' | 'updatedAt'
->;
+export type CreateComment = Omit<CommentInterface, 'id' | 'createdAt' | 'updatedAt'>;
 
 export type CreateCommentInput = Omit<CreateComment, 'user' | 'offer'>;
