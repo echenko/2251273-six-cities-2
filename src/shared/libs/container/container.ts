@@ -17,6 +17,7 @@ import { CommentRepository, CommentService, DefaultCommentRepository, DefaultCom
 import { DefaultUserService, UserService } from '../../modules/user/user.service.js';
 import { DefaultOfferService, OfferService } from '../../modules/offer/offer.service.js';
 import { AuthService, DefaultAuthService } from '../../modules/auth/auth.service.js';
+import { AuthController } from '../../modules/auth/auth.controller.js';
 
 const container = new Container();
 
@@ -47,5 +48,8 @@ container.bind<CommentService>(TYPES.CommentService).to(DefaultCommentService).i
 container.bind<UserService>(TYPES.UserService).to(DefaultUserService).inSingletonScope();
 container.bind<OfferService>(TYPES.OfferService).to(DefaultOfferService).inSingletonScope();
 container.bind<AuthService>(TYPES.AuthService).to(DefaultAuthService).inSingletonScope();
+
+// Контроллеры
+container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
 
 export { container };
