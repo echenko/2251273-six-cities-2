@@ -37,7 +37,6 @@ const OFFER_CITIES_NAMES = ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hambur
 const OFFER_CITY_DEFAULT = OFFER_CITIES_NAMES[0];
 
 const TSV_FIELDS_OFFER = [
-  'id',
   'title',
   'type',
   'price',

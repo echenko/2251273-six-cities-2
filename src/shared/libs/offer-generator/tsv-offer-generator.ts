@@ -1,6 +1,5 @@
 import { OfferGenerator } from './offer-generator.interface.js';
 import { MockServerDataType, OffersItemType } from './../../types/index.type.js';
-import { v4 } from 'uuid';
 import {
   getRandomValue,
   getRandomItem,
@@ -34,7 +33,6 @@ export class TSVOfferGenerator implements OfferGenerator {
       users,
     } = this.mockData;
 
-    const id = v4();
     const title = getRandomItem(titles);
     const type = getRandomItem(types);
     const cityName = getRandomItem(cites);
@@ -59,7 +57,6 @@ export class TSVOfferGenerator implements OfferGenerator {
     const maxAdults = getRandomValue(OFFER_ADULTS.min, OFFER_ADULTS.max);
 
     const offer: OffersItemType = {
-      id,
       title,
       type,
       price,

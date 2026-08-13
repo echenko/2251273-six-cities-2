@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 function getRandomValue(min: number, max: number, numAfterDigit: number = 0): number {
   return Number((Math.random() * (max - min) + min).toFixed(numAfterDigit));
 }
@@ -40,10 +42,15 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: unkno
   current[lastKey] = value;
 }
 
+function generateId(): string {
+  return randomUUID();
+}
+
 export {
   getRandomValue,
   getRandomItem,
   getRandomItems,
   getNestedValue,
   setNestedValue,
+  generateId,
 };

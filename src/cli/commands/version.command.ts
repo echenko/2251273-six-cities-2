@@ -24,7 +24,7 @@ export class VersionCommand implements Command {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     private readonly filePath: string = './package.json',
-  ) {}
+  ) { }
 
   private readVersion(): string {
     const absolutePath = resolve(this.filePath);
@@ -48,11 +48,10 @@ export class VersionCommand implements Command {
       const version = this.readVersion();
       this.logger.info(`Version: ${version}`);
     } catch (error: unknown) {
-      this.logger.error(error as Error, 'VersionCommand: Failed to read version from package.json');
-
-      if (error instanceof Error) {
-        this.logger.error(error, 'VersionCommand: Failed to read version from package.json');
-      }
+      this.logger.error(
+        error instanceof Error ? error : new Error(String(error)),
+        'VersionCommand: Failed to read version from package.json',
+      );
     }
   }
 }

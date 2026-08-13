@@ -1,12 +1,23 @@
 import { Types } from 'mongoose';
 
+export type OfferType = 'apartment' | 'house' | 'room' | 'hotel';
+export type CityName =
+  | 'Paris'
+  | 'Cologne'
+  | 'Brussels'
+  | 'Amsterdam'
+  | 'Hamburg'
+  | 'Dusseldorf';
+
 export interface OfferInterface {
   id: string;
+  createdAt: Date;
+  updatedAt: Date;
   title: string;
-  type: string;
+  type: OfferType;
   price: number;
   previewImage: string;
-  cityName: string;
+  cityName: CityName;
   cityLatitude: number;
   cityLongitude: number;
   cityZoom: number;
@@ -22,4 +33,9 @@ export interface OfferInterface {
   user: Types.ObjectId;
   images: string[];
   maxAdults: number;
+  commentsCount: number;
 }
+
+export type CreateOffer = Omit<OfferInterface, 'id' | 'createdAt' | 'updatedAt' | 'commentsCount'>;
+
+export type CreateOfferInput = Omit<CreateOffer, 'user'>;

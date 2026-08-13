@@ -13,6 +13,11 @@ import {
   GenerateCommand
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
+import { CommentRepository, CommentService, DefaultCommentRepository, DefaultCommentService } from '../../modules/comment/index.js';
+import { DefaultUserService, UserService } from '../../modules/user/user.service.js';
+import { DefaultOfferService, OfferService } from '../../modules/offer/offer.service.js';
+import { AuthService, DefaultAuthService } from '../../modules/auth/auth.service.js';
+import { AuthController } from '../../modules/auth/auth.controller.js';
 
 const container = new Container();
 
@@ -29,6 +34,7 @@ container.bind<DatabaseClientInterface>(TYPES.DatabaseClient).to(MongoClient).in
 // Репозитории
 container.bind<UserRepository>(TYPES.UserRepository).to(DefaultUserRepository);
 container.bind<OfferRepository>(TYPES.OfferRepository).to(DefaultOfferRepository);
+container.bind<CommentRepository>(TYPES.CommentRepository).to(DefaultCommentRepository);
 
 // CLI
 container.bind<CliApplication>(TYPES.CLIApplication).to(CliApplication);
@@ -36,5 +42,14 @@ container.bind<HelpCommand>(TYPES.HelpCommand).to(HelpCommand);
 container.bind<VersionCommand>(TYPES.VersionCommand).to(VersionCommand);
 container.bind<ImportCommand>(TYPES.ImportCommand).to(ImportCommand);
 container.bind<GenerateCommand>(TYPES.GenerateCommand).to(GenerateCommand);
+
+// Сервисы
+container.bind<CommentService>(TYPES.CommentService).to(DefaultCommentService).inSingletonScope();
+container.bind<UserService>(TYPES.UserService).to(DefaultUserService).inSingletonScope();
+container.bind<OfferService>(TYPES.OfferService).to(DefaultOfferService).inSingletonScope();
+container.bind<AuthService>(TYPES.AuthService).to(DefaultAuthService).inSingletonScope();
+
+// Контроллеры
+container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
 
 export { container };
