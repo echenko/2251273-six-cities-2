@@ -23,4 +23,5 @@ export const TYPES = {
   AuthService: Symbol.for('AuthService'),
   // Контроллеры
   AuthController: Symbol.for('AuthController'),
+  UserController: Symbol.for('UserController'),
 };

@@ -6,6 +6,7 @@ import { RestConfig } from './../shared/libs/config/index.js';
 import { DatabaseClientInterface } from './../shared/libs/database/index.js';
 import { TYPES } from '../shared/libs/container/container.types.js';
 import { AuthController } from './../shared/modules/auth/auth.controller.js';
+import { UserController } from '../shared/modules/user/user.controller.js';
 
 @injectable()
 export class RestApplication {
@@ -16,8 +17,8 @@ export class RestApplication {
     @inject(TYPES.Config) private readonly config: RestConfig,
     @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
     @inject(TYPES.AuthController) private readonly authController: AuthController,
+     @inject(TYPES.UserController) private readonly userController: UserController,
   ) {
-    // Создаём Express-приложение сразу в конструкторе
     this.app = express();
   }
 
@@ -75,13 +76,8 @@ export class RestApplication {
    * Подключение роутов контроллеров
    */
   private initRoutes(): void {
-    // Все роуты authController будут доступны по префиксу /auth
-    // Итоговый путь: POST /auth/login
     this.app.use('/auth', this.authController.getRouter());
-
-    // Здесь позже подключим другие контроллеры:
-    // this.app.use('/users', this.userController.getRouter());
-    // this.app.use('/offers', this.offerController.getRouter());
+    this.app.use('/users', this.userController.getRouter());
 
     this.logger.info('RestApplication: Routes initialized.');
   }

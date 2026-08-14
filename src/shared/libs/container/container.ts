@@ -18,6 +18,7 @@ import { DefaultUserService, UserService } from '../../modules/user/user.service
 import { DefaultOfferService, OfferService } from '../../modules/offer/offer.service.js';
 import { AuthService, DefaultAuthService } from '../../modules/auth/auth.service.js';
 import { AuthController } from '../../modules/auth/auth.controller.js';
+import { UserController } from '../../modules/user/user.controller.js';
 
 const container = new Container();
 
@@ -51,5 +52,7 @@ container.bind<AuthService>(TYPES.AuthService).to(DefaultAuthService).inSingleto
 
 // Контроллеры
 container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
+container.bind<UserController>(TYPES.UserController).to(UserController).inSingletonScope();
+
 
 export { container };

@@ -32,7 +32,7 @@ export class DefaultAuthService implements AuthService {
 
     const secret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user.id, email: user.email },
       secret,
       { expiresIn: '7d' }
     );
