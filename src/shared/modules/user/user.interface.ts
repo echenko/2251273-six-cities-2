@@ -11,4 +11,11 @@ export interface UserInterface {
   type: UserType;
 }
 
-export type CreateUser = Omit<UserInterface, 'id' | 'createdAt' | 'updatedAt'>;
+export type PublicUser = Omit<UserInterface, 'password'>;
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+  avatarUrl?: string;
+}

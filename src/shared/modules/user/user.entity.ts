@@ -1,5 +1,5 @@
 import { Document, model, Model, Schema, Types } from 'mongoose';
-import { generateId } from './../../helpers/index.js';
+import { generateId } from '../../helpers/index.js';
 import { UserInterface } from './user.interface.js';
 
 export type DocumentUser = UserInterface &
@@ -15,12 +15,15 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
       unique: true,
       default: () => generateId(),
     },
+
     name: {
       type: String,
       required: true,
+      trim: true,
       minlength: 1,
       maxlength: 50,
     },
+
     email: {
       type: String,
       required: true,
@@ -28,15 +31,19 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
       lowercase: true,
       trim: true,
     },
+
     password: {
       type: String,
       required: true,
       select: false,
     },
+
     avatarUrl: {
       type: String,
+      trim: true,
       default: '',
     },
+
     type: {
       type: String,
       required: true,
@@ -59,7 +66,10 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
         return result;
       },
     },
-  }
+  },
 );
 
-export const UserModel: Model<DocumentUser> = model<DocumentUser>('User', userSchema,);
+export const UserModel: Model<DocumentUser> = model<DocumentUser>(
+  'User',
+  userSchema,
+);

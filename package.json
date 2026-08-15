@@ -26,7 +26,7 @@
     "dev": "npm run docker:up && npm run dev:api"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
+    "@types/bcrypt": "6.0.0",
     "@types/convict": "^6.1.6",
     "@types/convict-format-with-validator": "6.0.6",
     "@types/cors": "2.8.19",
@@ -68,6 +68,7 @@
     "pino": "10.3.1",
     "reflect-metadata": "^0.2.2",
     "tslib": "^2.8.1",
-    "uuid": "14.0.1"
+    "uuid": "14.0.1",
+    "zod": "4.4.3"
   }
 }

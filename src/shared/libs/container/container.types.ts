@@ -17,8 +17,8 @@ export const TYPES = {
   ImportCommand: Symbol.for('ImportCommand'),
   GenerateCommand: Symbol.for('GenerateCommand'),
   // Сервисы
-  CommentService: Symbol.for('CommentService'),
   UserService: Symbol.for('UserService'),
+  CommentService: Symbol.for('CommentService'),
   OfferService: Symbol.for('OfferService'),
   AuthService: Symbol.for('AuthService'),
   // Контроллеры

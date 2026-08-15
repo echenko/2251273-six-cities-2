@@ -10,11 +10,16 @@ import {
   HelpCommand,
   VersionCommand,
   ImportCommand,
-  GenerateCommand
+  GenerateCommand,
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
-import { CommentRepository, CommentService, DefaultCommentRepository, DefaultCommentService } from '../../modules/comment/index.js';
-import { DefaultUserService, UserService } from '../../modules/user/user.service.js';
+import {
+  CommentRepository,
+  CommentService,
+  DefaultCommentRepository,
+  DefaultCommentService,
+} from '../../modules/comment/index.js';
+import { UserService } from '../../modules/user/user.service.js';
 import { DefaultOfferService, OfferService } from '../../modules/offer/offer.service.js';
 import { AuthService, DefaultAuthService } from '../../modules/auth/auth.service.js';
 import { AuthController } from '../../modules/auth/auth.controller.js';
@@ -22,7 +27,7 @@ import { UserController } from '../../modules/user/user.controller.js';
 
 const container = new Container();
 
-// Общие зависимости)
+// Общие зависимости
 container.bind<LoggerInterface>(TYPES.Logger).to(PinoLogger).inSingletonScope();
 container.bind<RestConfig>(TYPES.Config).to(RestConfig).inSingletonScope();
 
@@ -46,9 +51,9 @@ container.bind<GenerateCommand>(TYPES.GenerateCommand).to(GenerateCommand);
 
 // Сервисы
 container.bind<CommentService>(TYPES.CommentService).to(DefaultCommentService).inSingletonScope();
-container.bind<UserService>(TYPES.UserService).to(DefaultUserService).inSingletonScope();
 container.bind<OfferService>(TYPES.OfferService).to(DefaultOfferService).inSingletonScope();
 container.bind<AuthService>(TYPES.AuthService).to(DefaultAuthService).inSingletonScope();
+container.bind<UserService>(TYPES.UserService).to(UserService).inSingletonScope();
 
 // Контроллеры
 container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
