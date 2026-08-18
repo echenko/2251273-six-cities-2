@@ -34,26 +34,44 @@ export abstract class BaseController {
   }
 
   public badRequest(res: Response, message: string): void {
-    this.send(res, StatusCodes.BAD_REQUEST, { message });
+    this.send(res, StatusCodes.BAD_REQUEST, {
+      statusCode: StatusCodes.BAD_REQUEST,
+      message,
+    });
   }
 
   public unauthorized(res: Response, message: string): void {
-    this.send(res, StatusCodes.UNAUTHORIZED, { message });
+    this.send(res, StatusCodes.UNAUTHORIZED, {
+      statusCode: StatusCodes.UNAUTHORIZED,
+      message,
+    });
   }
 
   public forbidden(res: Response, message: string): void {
-    this.send(res, StatusCodes.FORBIDDEN, { message });
+    this.send(res, StatusCodes.FORBIDDEN, {
+      statusCode: StatusCodes.FORBIDDEN,
+      message,
+    });
   }
 
   public notFound(res: Response, message: string): void {
-    this.send(res, StatusCodes.NOT_FOUND, { message });
+    this.send(res, StatusCodes.NOT_FOUND, {
+      statusCode: StatusCodes.NOT_FOUND,
+      message,
+    });
   }
 
   public conflict(res: Response, message: string): void {
-    this.send(res, StatusCodes.CONFLICT, { message });
+    this.send(res, StatusCodes.CONFLICT, {
+      statusCode: StatusCodes.CONFLICT,
+      message,
+    });
   }
 
   public internalServerError(res: Response, message: string): void {
-    this.send(res, StatusCodes.INTERNAL_SERVER_ERROR, { message });
+    this.send(res, StatusCodes.INTERNAL_SERVER_ERROR, {
+      statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
+      message,
+    });
   }
 }

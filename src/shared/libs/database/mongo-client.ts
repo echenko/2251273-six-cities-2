@@ -4,6 +4,7 @@ import { DatabaseClientInterface } from './index.js';
 import { LoggerInterface } from '../logger/logger.interface.js';
 import { RestConfig } from './../config/index.js';
 import { TYPES } from '../container/container.types.js';
+import { UserModel } from '../../modules/user/user.entity.js';
 
 @injectable()
 export class MongoClient implements DatabaseClientInterface {
@@ -18,24 +19,45 @@ export class MongoClient implements DatabaseClientInterface {
 
     this.logger.info(`MongoClient: Attempting to connect to MongoDB at ${mongoUrl}...`);
 
+    if (mongoose.connection.readyState !== 0) {
+      this.logger.warn('MongoClient: Previous connection state detected. Forcing disconnect...');
+      await mongoose.disconnect();
+    }
+
+    const connection = mongoose.connection;
+
+    connection.on('error', (error) => {
+      this.logger.error(error, 'MongoClient: MongoDB connection error');
+    });
+
+    connection.on('disconnected', () => {
+      this.logger.warn('MongoClient: MongoDB connection was disconnected');
+    });
+
+    connection.on('reconnected', () => {
+      this.logger.info('MongoClient: MongoDB reconnected successfully');
+    });
+
     try {
-      await mongoose.connect(mongoUrl, { dbName });
-      this.logger.info('MongoClient: Database connection established successfully!');
-
-      const connection = mongoose.connection;
-
-      connection.on('error', (error) => {
-        this.logger.error(error, 'MongoClient: MongoDB connection error');
+      await mongoose.connect(mongoUrl, {
+        dbName,
+        directConnection: true,
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        heartbeatFrequencyMS: 10000,
       });
 
-      connection.on('connected', () => {
-        this.logger.info('MongoClient: MongoDB is connected');
-      });
+      await connection.asPromise();
 
-      connection.on('disconnected', () => {
-        this.logger.warn('MongoClient: MongoDB connection was disconnected');
-      });
+      if (connection.db) {
+        await connection.db.admin().ping();
+      }
 
+      await UserModel.init();
+
+      this.logger.info('MongoClient: Indexes synchronized.');
+      this.logger.info('MongoClient: Database connection established and verified!');
     } catch (error) {
       this.logger.error(error as Error, 'MongoClient: Failed to connect to MongoDB');
       throw error;
@@ -45,7 +67,9 @@ export class MongoClient implements DatabaseClientInterface {
   public async disconnect(): Promise<void> {
     this.logger.info('MongoClient: Disconnecting from MongoDB...');
     try {
-      await mongoose.disconnect();
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+      }
       this.logger.info('MongoClient: Database connection closed successfully!');
     } catch (error) {
       this.logger.error(error as Error, 'MongoClient: Failed to disconnect from MongoDB');

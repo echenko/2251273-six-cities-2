@@ -55,6 +55,7 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
     id: false,
     timestamps: true,
     collection: 'users',
+    autoIndex: false,
     toJSON: {
       transform: (_doc, ret) => {
         const result = ret as Record<string, unknown>;
