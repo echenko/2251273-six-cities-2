@@ -11,6 +11,8 @@ export type RestSchema = {
   defaultDataPath: string;
   mongoUrl: string;
   mongoDbName: string;
+  jwtSecret: string;
+  jwtExpiresIn: string;
 };
 
 export const configRestSchema = convict<RestSchema>({
@@ -55,5 +57,17 @@ export const configRestSchema = convict<RestSchema>({
     format: String,
     default: 'six-cities',
     env: 'MONGO_DB_NAME',
+  },
+  jwtSecret: {
+    doc: 'JWT secret key',
+    format: String,
+    default: 'change_me',
+    env: 'JWT_SECRET',
+  },
+  jwtExpiresIn: {
+    doc: 'JWT expiration time',
+    format: String,
+    default: '1d',
+    env: 'JWT_EXPIRES_IN',
   },
 });

@@ -11,7 +11,7 @@ export interface OfferService {
   findById(id: string): Promise<DocumentOffer | null>;
   findAll(limit?: number): Promise<DocumentOffer[]>;
   findByCity(city: CityName): Promise<DocumentOffer[]>;
-  findByUserId(publicUserId: string): Promise<DocumentOffer[]>;
+  findByUserId(publicUserId: string, limit?: number): Promise<DocumentOffer[]>;
   deleteById(id: string): Promise<boolean>;
 }
 
@@ -25,12 +25,10 @@ export class DefaultOfferService implements OfferService {
 
   public async create(publicUserId: string, dto: CreateOfferInput): Promise<DocumentOffer> {
     this.logger.info(`DefaultOfferService: Creating offer for user ${publicUserId}`);
-
     const user = await this.userRepository.findById(publicUserId);
     if (!user) {
       throw new Error(`User with id ${publicUserId} not found`);
     }
-
     return this.offerRepository.create({
       ...dto,
       user: user._id,
@@ -38,29 +36,23 @@ export class DefaultOfferService implements OfferService {
   }
 
   public async findById(id: string): Promise<DocumentOffer | null> {
-    this.logger.debug(`DefaultOfferService: Finding offer by id ${id}`);
     return this.offerRepository.findById(id);
   }
 
   public async findAll(limit?: number): Promise<DocumentOffer[]> {
-    this.logger.debug(`DefaultOfferService: Finding all offers (limit: ${limit})`);
     return this.offerRepository.findAll(limit);
   }
 
   public async findByCity(city: CityName): Promise<DocumentOffer[]> {
-    this.logger.debug(`DefaultOfferService: Finding offers in city ${city}`);
     return this.offerRepository.findByCity(city);
   }
 
-  public async findByUserId(publicUserId: string): Promise<DocumentOffer[]> {
-    this.logger.debug(`DefaultOfferService: Finding offers for user ${publicUserId}`);
-
+  public async findByUserId(publicUserId: string, limit: number = 60): Promise<DocumentOffer[]> {
     const user = await this.userRepository.findById(publicUserId);
     if (!user) {
       throw new Error(`User with id ${publicUserId} not found`);
     }
-
-    return this.offerRepository.findByUserId(user._id.toString());
+    return this.offerRepository.findByUserId(user._id.toString(), limit);
   }
 
   public async deleteById(id: string): Promise<boolean> {

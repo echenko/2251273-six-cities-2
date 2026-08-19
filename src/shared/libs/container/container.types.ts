@@ -10,6 +10,7 @@ export const TYPES = {
   UserRepository: Symbol.for('UserRepository'),
   OfferRepository: Symbol.for('OfferRepository'),
   CommentRepository: Symbol.for('CommentRepository'),
+  AuthRepository: Symbol.for('AuthRepository'),
   // CLI
   CLIApplication: Symbol.for('CLIApplication'),
   HelpCommand: Symbol.for('HelpCommand'),
@@ -22,6 +23,9 @@ export const TYPES = {
   OfferService: Symbol.for('OfferService'),
   AuthService: Symbol.for('AuthService'),
   // Контроллеры
-  AuthController: Symbol.for('AuthController'),
   UserController: Symbol.for('UserController'),
+  AuthController: Symbol.for('AuthController'),
+  OfferController: Symbol.for('OfferController'),
+  // Middleware
+  AuthMiddleware: Symbol.for('AuthMiddleware'),
 };
