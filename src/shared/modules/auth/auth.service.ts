@@ -21,11 +21,8 @@ export interface TokenPayload {
   email: string;
 }
 
-export class AuthError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number = 401,
-  ) {
+export class LoginError extends Error {
+  constructor(message: string) {
     super(message);
   }
 }
@@ -47,17 +44,16 @@ export class AuthService {
 
     const user = await this.userRepository.findByEmailForAuth(dto.email);
     if (!user) {
-      throw new AuthError('Invalid email or password', 401);
+      throw new LoginError('Invalid email or password');
     }
 
     const passwordMatch = await compare(dto.password, user.password);
     if (!passwordMatch) {
-      throw new AuthError('Invalid email or password', 401);
+      throw new LoginError('Invalid email or password');
     }
 
     const secret = this.config.get('jwtSecret');
     const expiresIn = this.config.get('jwtExpiresIn');
-
     const signOptions: SignOptions = {
       expiresIn: expiresIn as unknown as SignOptions['expiresIn'],
     };
@@ -96,6 +92,7 @@ export class AuthService {
       if (!auth || auth.isRevoked) {
         return null;
       }
+
       return payload;
     } catch {
       return null;

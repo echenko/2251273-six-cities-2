@@ -1,4 +1,3 @@
-// auth.controller.ts (ПРАВИЛЬНАЯ ВЕРСИЯ)
 import { Router, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import asyncHandler from 'express-async-handler';
@@ -6,9 +5,10 @@ import { ZodError } from 'zod';
 import { BaseController } from '../../libs/controller/index.js';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
-import { AuthService, AuthError } from './auth.service.js';
+import { AuthService, LoginError } from './auth.service.js';
 import { loginSchema } from './auth.dto.js';
 import { AUTH_CONSTANTS } from './auth.constant.js';
+import { extractBearerToken } from './../../helpers/auth.helpers.js';
 
 @injectable()
 export class AuthController extends BaseController {
@@ -45,12 +45,11 @@ export class AuthController extends BaseController {
           this.ok(res, result);
         } catch (error) {
           if (error instanceof ZodError) {
-            const message =
-              error.issues.map((i) => i.message).join(', ') || 'Validation error';
+            const message = error.issues.map((i) => i.message).join(', ') || 'Validation error';
             this.badRequest(res, message);
             return;
           }
-          if (error instanceof AuthError) {
+          if (error instanceof LoginError) {
             this.unauthorized(res, error.message);
             return;
           }
@@ -65,7 +64,7 @@ export class AuthController extends BaseController {
       '/logout',
       asyncHandler(async (req: Request, res: Response) => {
         try {
-          const token = this.extractBearer(req);
+          const token = extractBearerToken(req);
           if (!token) {
             this.unauthorized(res, 'Authorization token is required');
             return;
@@ -86,15 +85,6 @@ export class AuthController extends BaseController {
         }
       }),
     );
-  }
-
-  private extractBearer(req: Request): string | null {
-    const header = req.get('authorization') ?? '';
-    const [scheme, token] = header.split(' ');
-    if (scheme?.toLowerCase() !== 'bearer' || !token) {
-      return null;
-    }
-    return token.trim() || null;
   }
 
   public getRouter(): Router {
