@@ -1,4 +1,5 @@
 import express, { Express } from 'express';
+import { exit } from 'node:process';
 import cors from 'cors';
 import { injectable, inject } from 'inversify';
 import { LoggerInterface } from '../shared/libs/logger/logger.interface.js';
@@ -27,7 +28,7 @@ export class RestApplication {
 
   public async init(): Promise<void> {
     const port = this.config.get('port') || 3000;
-    this.logger.info(`RestApplication: Initializing REST application on port ${port}`);
+    this.logger.info(`RestApplication: Initializing REST application on port ${port}!`);
 
     try {
       await this.databaseClient.connect();
@@ -52,7 +53,7 @@ export class RestApplication {
     this.app.use(express.urlencoded({ extended: true }));
 
     this.app.use((req, _res, next) => {
-      this.logger.info(`→ ${req.method} ${req.url}`);
+      this.logger.info(`--${req.method} ${req.url}`);
       next();
     });
 
@@ -65,7 +66,7 @@ export class RestApplication {
     this.app.use('/offers', this.offerController.getRouter());
 
     this.app.use((_req, res) => {
-      res.status(404).json({ statusCode: 404, message: 'Route not found' });
+      res.status(404).json({ statusCode: 404, message: 'Route not found!' });
     });
 
     this.logger.info('RestApplication: Routes initialized.');
@@ -77,10 +78,10 @@ export class RestApplication {
       try {
         await this.databaseClient.disconnect();
         this.logger.info('RestApplication: Graceful shutdown completed.');
-        process.exitCode = 0;
+        exit(0);
       } catch (error) {
         this.logger.error(error as Error, 'RestApplication: Error during shutdown');
-        process.exitCode = 1;
+        exit(1);
       }
     };
     process.on('SIGINT', () => shutdown('SIGINT'));
