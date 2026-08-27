@@ -47,43 +47,21 @@ export const offerSchema = new Schema<DocumentOffer>(
         'Hamburg',
         'Dusseldorf',
       ],
+      index: true,
     },
-    cityLatitude: {
-      type: Number,
-      required: true,
-    },
-    cityLongitude: {
-      type: Number,
-      required: true,
-    },
-    cityZoom: {
-      type: Number,
-      required: true,
-    },
-    offerLatitude: {
-      type: Number,
-      required: true,
-    },
-    offerLongitude: {
-      type: Number,
-      required: true,
-    },
-    offerZoom: {
-      type: Number,
-      required: true,
-    },
-    isFavorite: {
-      type: Boolean,
-      default: false,
-    },
-    isPremium: {
-      type: Boolean,
-      default: false,
-    },
+    cityLatitude: { type: Number, required: true },
+    cityLongitude: { type: Number, required: true },
+    cityZoom: { type: Number, required: true },
+    offerLatitude: { type: Number, required: true },
+    offerLongitude: { type: Number, required: true },
+    offerZoom: { type: Number, required: true },
+    isFavorite: { type: Boolean, default: false },
+    isPremium: { type: Boolean, default: false },
     rating: {
       type: Number,
       min: 0,
       max: 5,
+      default: 0,
     },
     description: {
       type: String,
@@ -105,6 +83,7 @@ export const offerSchema = new Schema<DocumentOffer>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
     },
     images: {
       type: [String],
@@ -128,14 +107,15 @@ export const offerSchema = new Schema<DocumentOffer>(
     toJSON: {
       transform: (_doc, ret) => {
         const result = ret as Record<string, unknown>;
-
         delete result._id;
         delete result.__v;
-
         return result;
       },
     },
-  }
+  },
 );
 
-export const OfferModel: Model<DocumentOffer> = model<DocumentOffer>('Offer', offerSchema,);
+export const OfferModel: Model<DocumentOffer> = model<DocumentOffer>(
+  'Offer',
+  offerSchema,
+);

@@ -1,11 +1,15 @@
 import express, { Express } from 'express';
+import { exit } from 'node:process';
 import cors from 'cors';
 import { injectable, inject } from 'inversify';
 import { LoggerInterface } from '../shared/libs/logger/logger.interface.js';
 import { RestConfig } from './../shared/libs/config/index.js';
 import { DatabaseClientInterface } from './../shared/libs/database/index.js';
 import { TYPES } from '../shared/libs/container/container.types.js';
+// Контроллеры
 import { AuthController } from './../shared/modules/auth/auth.controller.js';
+import { UserController } from '../shared/modules/user/user.controller.js';
+import { OfferController } from '../shared/modules/offer/offer.controller.js';
 
 @injectable()
 export class RestApplication {
@@ -16,16 +20,16 @@ export class RestApplication {
     @inject(TYPES.Config) private readonly config: RestConfig,
     @inject(TYPES.DatabaseClient) private readonly databaseClient: DatabaseClientInterface,
     @inject(TYPES.AuthController) private readonly authController: AuthController,
+    @inject(TYPES.UserController) private readonly userController: UserController,
+    @inject(TYPES.OfferController) private readonly offerController: OfferController,
   ) {
-    // Создаём Express-приложение сразу в конструкторе
     this.app = express();
   }
 
   public async init(): Promise<void> {
     const port = this.config.get('port') || 3000;
-    this.logger.info(`RestApplication: Initializing REST application on port ${port}`);
+    this.logger.info(`RestApplication: Initializing REST application on port ${port}!`);
 
-    // 1. Подключение к БД
     try {
       await this.databaseClient.connect();
       this.logger.info('RestApplication: Database connection ready for operations.');
@@ -34,54 +38,36 @@ export class RestApplication {
       throw error;
     }
 
-    // 2. Настройка middleware
     this.initMiddleware();
-
-    // 3. Подключение роутов
     this.initRoutes();
-
-    // 4. Настройка graceful shutdown
     this.setupGracefulShutdown();
 
-    // 5. Запуск сервера
     this.app.listen(port, () => {
       this.logger.info(`RestApplication: Server started on http://localhost:${port}`);
     });
   }
 
-  /**
-   * Инициализация глобальных middleware
-   */
   private initMiddleware(): void {
-    // CORS — чтобы фронтенд с другого порта мог обращаться к API
     this.app.use(cors());
-
-    // Парсинг JSON-тела запросов (обязательно для POST/PUT)
     this.app.use(express.json());
-
-    // Парсинг URL-encoded данных (для HTML-форм)
     this.app.use(express.urlencoded({ extended: true }));
 
-    // Простое логирование всех входящих запросов
     this.app.use((req, _res, next) => {
-      this.logger.info(`→ ${req.method} ${req.url}`);
+      this.logger.info(`--${req.method} ${req.url}`);
       next();
     });
 
     this.logger.info('RestApplication: Middleware initialized.');
   }
 
-  /**
-   * Подключение роутов контроллеров
-   */
   private initRoutes(): void {
-    // Все роуты authController будут доступны по префиксу /auth
-    // Итоговый путь: POST /auth/login
     this.app.use('/auth', this.authController.getRouter());
+    this.app.use('/users', this.userController.getRouter());
+    this.app.use('/offers', this.offerController.getRouter());
 
-    // Здесь позже подключим другие контроллеры:
-    // this.app.use('/users', this.userController.getRouter());
-    // this.app.use('/offers', this.offerController.getRouter());
+    this.app.use((_req, res) => {
+      res.status(404).json({ statusCode: 404, message: 'Route not found!' });
+    });
 
     this.logger.info('RestApplication: Routes initialized.');
   }
@@ -92,13 +78,12 @@ export class RestApplication {
       try {
         await this.databaseClient.disconnect();
         this.logger.info('RestApplication: Graceful shutdown completed.');
-        process.exitCode = 0;
+        exit(0);
       } catch (error) {
         this.logger.error(error as Error, 'RestApplication: Error during shutdown');
-        process.exitCode = 1;
+        exit(1);
       }
     };
-
     process.on('SIGINT', () => shutdown('SIGINT'));
     process.on('SIGTERM', () => shutdown('SIGTERM'));
   }

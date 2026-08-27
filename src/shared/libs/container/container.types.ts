@@ -10,6 +10,7 @@ export const TYPES = {
   UserRepository: Symbol.for('UserRepository'),
   OfferRepository: Symbol.for('OfferRepository'),
   CommentRepository: Symbol.for('CommentRepository'),
+  AuthRepository: Symbol.for('AuthRepository'),
   // CLI
   CLIApplication: Symbol.for('CLIApplication'),
   HelpCommand: Symbol.for('HelpCommand'),
@@ -17,10 +18,14 @@ export const TYPES = {
   ImportCommand: Symbol.for('ImportCommand'),
   GenerateCommand: Symbol.for('GenerateCommand'),
   // Сервисы
-  CommentService: Symbol.for('CommentService'),
   UserService: Symbol.for('UserService'),
+  CommentService: Symbol.for('CommentService'),
   OfferService: Symbol.for('OfferService'),
   AuthService: Symbol.for('AuthService'),
   // Контроллеры
+  UserController: Symbol.for('UserController'),
   AuthController: Symbol.for('AuthController'),
+  OfferController: Symbol.for('OfferController'),
+  // Middleware
+  AuthMiddleware: Symbol.for('AuthMiddleware'),
 };

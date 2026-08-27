@@ -4,7 +4,7 @@ import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { UserRepository } from './user.repository.interface.js';
 import { DocumentUser, UserModel } from './user.entity.js';
-import { CreateUser } from './user.interface.js';
+import { CreateUserInput } from './user.interface.js';
 
 @injectable()
 export class DefaultUserRepository implements UserRepository {
@@ -13,7 +13,9 @@ export class DefaultUserRepository implements UserRepository {
   ) {}
 
   public async findById(id: string): Promise<DocumentUser | null> {
-    this.logger.debug(`DefaultUserRepository: Searching for user by ID ${id}`);
+    this.logger.debug(
+      'DefaultUserRepository: Searching for user by public id',
+    );
 
     return UserModel.findOne({ id }).exec();
   }
@@ -22,7 +24,7 @@ export class DefaultUserRepository implements UserRepository {
     internalId: string,
   ): Promise<DocumentUser | null> {
     this.logger.debug(
-      `DefaultUserRepository: Searching for user by internal ID ${internalId}`,
+      'DefaultUserRepository: Searching for user by internal id',
     );
 
     if (!Types.ObjectId.isValid(internalId)) {
@@ -41,15 +43,20 @@ export class DefaultUserRepository implements UserRepository {
   public async findByEmailForAuth(
     email: string,
   ): Promise<DocumentUser | null> {
-    this.logger.debug('DefaultUserRepository: Auth lookup for user');
+    this.logger.debug(
+      'DefaultUserRepository: Searching for user by email for auth',
+    );
 
     return UserModel.findOne({ email }).select('+password').exec();
   }
 
-  public async create(dto: CreateUser): Promise<DocumentUser> {
+  public async create(dto: CreateUserInput): Promise<DocumentUser> {
     this.logger.info('DefaultUserRepository: Creating new user');
 
-    const user = new UserModel(dto);
+    const user = new UserModel({
+      ...dto,
+      avatarUrl: dto.avatarUrl ?? '',
+    });
 
     return user.save();
   }

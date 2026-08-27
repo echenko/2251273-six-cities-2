@@ -1,42 +1,130 @@
-import { injectable, inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { compare } from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
-import { UserRepository } from '../user/user.repository.interface.js';
-import { DocumentUser } from '../user/user.entity.js';
+import { RestConfig } from '../../libs/config/index.js';
+import { AuthRepository } from './auth.repository.interface.js';
+import { UserService } from '../user/user.service.js';
+import { DocumentAuth } from './auth.entity.js';
+import { CreateAuthInput, PublicAuth } from './auth.interface.js';
+import { PublicUser } from '../user/user.interface.js';
+import { LoginDto } from './auth.dto.js';
 
-export interface AuthService {
-  login(email: string, password: string): Promise<{ token: string; user: DocumentUser }>;
+export interface LoginResult {
+  token: string;
+  user: PublicUser;
+}
+
+export interface TokenPayload {
+  userId: string;
+  email: string;
+}
+
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
 }
 
 @injectable()
-export class DefaultAuthService implements AuthService {
+export class AuthService {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
-    @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
+    @inject(TYPES.AuthRepository) private readonly authRepository: AuthRepository,
+    @inject(TYPES.UserService) private readonly userService: UserService,
+    @inject(TYPES.Config) private readonly config: RestConfig,
   ) {}
 
-  public async login(email: string, password: string): Promise<{ token: string; user: DocumentUser }> {
-    this.logger.info(`DefaultAuthService: Login attempt for ${email}`);
+  public async login(
+    dto: LoginDto,
+    meta: { userAgent?: string; ip?: string },
+  ): Promise<LoginResult> {
+    this.logger.info(`AuthService: login attempt for ${dto.email}`);
 
-    const user = await this.userRepository.findByEmailForAuth(email);
+    const user = await this.userService.findByEmailForAuth(dto.email);
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new AuthError('Invalid email or password');
     }
 
-    const isValid = await compare(password, user.password);
-    if (!isValid) {
-      throw new Error('Invalid email or password');
+    const passwordMatch = await compare(dto.password, user.password);
+    if (!passwordMatch) {
+      throw new AuthError('Invalid email or password');
     }
 
-    const secret = process.env.JWT_SECRET || 'default-secret-key-change-in-production';
+    const secret = this.config.get('jwtSecret');
+    const expiresIn = this.config.get('jwtExpiresIn');
+    const signOptions: SignOptions = {
+      expiresIn: expiresIn as unknown as SignOptions['expiresIn'],
+    };
+
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user.id, email: user.email },
       secret,
-      { expiresIn: '7d' }
+      signOptions,
     );
 
-    return { token, user };
+    const decoded = jwt.decode(token) as { exp: number } | null;
+    const expiresAt = decoded
+      ? new Date(decoded.exp * 1000)
+      : new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.authRepository.create({
+      userId: user.id,
+      token,
+      expiresAt,
+      userAgent: meta.userAgent,
+      ip: meta.ip,
+    } satisfies CreateAuthInput);
+
+    const publicUser = this.userService.toPublicUser(user);
+    this.logger.info(`AuthService: user ${user.id} logged in`);
+
+    return { token, user: publicUser };
+  }
+
+  public async verifyToken(token: string): Promise<TokenPayload | null> {
+    try {
+      const secret = this.config.get('jwtSecret');
+      const payload = jwt.verify(token, secret) as TokenPayload;
+
+      const auth = await this.authRepository.findByToken(token);
+      if (!auth || auth.isRevoked) {
+        return null;
+      }
+
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  public async revoke(token: string): Promise<PublicAuth | null> {
+    this.logger.info('AuthService: Revoking auth session');
+    const auth = await this.authRepository.revokeByToken(token);
+    if (!auth) {
+      return null;
+    }
+    return this.toPublicAuth(auth);
+  }
+
+  public async revokeAll(userId: string): Promise<number> {
+    this.logger.info(`AuthService: Revoking all sessions for user ${userId}`);
+    return this.authRepository.revokeAllByUserId(userId);
+  }
+
+  public async findById(id: string): Promise<PublicAuth | null> {
+    this.logger.debug('AuthService: Searching auth by public id');
+    const auth = await this.authRepository.findById(id);
+    if (!auth) {
+      return null;
+    }
+    return this.toPublicAuth(auth);
+  }
+
+  private toPublicAuth(auth: DocumentAuth): PublicAuth {
+    const publicAuth = auth.toJSON() as Record<string, unknown>;
+    delete publicAuth.token;
+    return publicAuth as PublicAuth;
   }
 }

@@ -1,50 +1,49 @@
-import { injectable, inject } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { hash } from 'bcrypt';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { UserRepository } from './user.repository.interface.js';
 import { DocumentUser } from './user.entity.js';
-import { CreateUser } from './user.interface.js';
-import { hash } from 'bcrypt';
+import { CreateUserInput, PublicUser } from './user.interface.js';
 
-export interface UserService {
-  create(dto: CreateUser): Promise<DocumentUser>;
-  findById(id: string): Promise<DocumentUser | null>;
-  findByInternalId(internalId: string): Promise<DocumentUser | null>;
-  findByEmail(email: string): Promise<DocumentUser | null>;
-}
+const SALT_ROUNDS = 10;
 
 @injectable()
-export class DefaultUserService implements UserService {
+export class UserService {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
-  ) { }
+  ) {}
 
-  public async create(dto: CreateUser): Promise<DocumentUser> {
-    this.logger.info('DefaultUserService: Creating new user');
+  public async create(dto: CreateUserInput): Promise<PublicUser> {
+    this.logger.info('UserService: Creating new user');
+    const passwordHash = await hash(dto.password, SALT_ROUNDS);
+    const user = await this.userRepository.create({
+      name: dto.name,
+      email: dto.email,
+      password: passwordHash,
+      avatarUrl: dto.avatarUrl ?? '',
+    });
+    return this.toPublicUser(user);
+  }
 
-    // Проверяем, не существует ли уже пользователь с таким email
-    const existingUser = await this.userRepository.findByEmail(dto.email);
-    if (existingUser) {
-      throw new Error(`User with email ${dto.email} already exists`);
+  public async findById(id: string): Promise<PublicUser | null> {
+    this.logger.debug('UserService: Searching user by public id');
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      return null;
     }
-
-    const hashedPassword = await hash(dto.password, 10);
-    const userDto = { ...dto, password: hashedPassword };
-
-    return this.userRepository.create(userDto);
+    return this.toPublicUser(user);
   }
 
-  public async findById(id: string): Promise<DocumentUser | null> {
-    this.logger.debug(`DefaultUserService: Finding user by id ${id}`);
-    return this.userRepository.findById(id);
+  public async findByEmailForAuth(email: string): Promise<DocumentUser | null> {
+    this.logger.debug('UserService: Searching user for auth by email');
+    return this.userRepository.findByEmailForAuth(email);
   }
 
-  public async findByInternalId(internalId: string): Promise<DocumentUser | null> {
-    return this.userRepository.findByInternalId(internalId);
-  }
-
-  public async findByEmail(email: string): Promise<DocumentUser | null> {
-    return this.userRepository.findByEmail(email);
+  public toPublicUser(user: DocumentUser): PublicUser {
+    const publicUser = user.toJSON() as Record<string, unknown>;
+    delete publicUser.password;
+    return publicUser as PublicUser;
   }
 }

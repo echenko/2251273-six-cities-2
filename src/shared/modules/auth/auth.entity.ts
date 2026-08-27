@@ -1,13 +1,13 @@
 import { Document, model, Model, Schema, Types } from 'mongoose';
 import { generateId } from '../../helpers/index.js';
-import { UserInterface } from './user.interface.js';
+import { AuthInterface } from './auth.interface.js';
 
-export type DocumentUser = UserInterface &
+export type DocumentAuth = AuthInterface &
   Document & {
     _id: Types.ObjectId;
   };
 
-const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
+const authSchema: Schema<DocumentAuth> = new Schema<DocumentAuth>(
   {
     id: {
       type: String,
@@ -15,62 +15,54 @@ const userSchema: Schema<DocumentUser> = new Schema<DocumentUser>(
       unique: true,
       default: () => generateId(),
     },
-
-    name: {
+    userId: {
       type: String,
       required: true,
-      trim: true,
-      minlength: 1,
-      maxlength: 50,
+      index: true,
     },
-
-    email: {
+    token: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
     },
-
-    password: {
-      type: String,
+    expiresAt: {
+      type: Date,
       required: true,
-      select: false,
     },
-
-    avatarUrl: {
+    isRevoked: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    userAgent: {
       type: String,
       trim: true,
       default: '',
     },
-
-    type: {
+    ip: {
       type: String,
-      required: true,
-      enum: ['regular', 'pro'],
-      default: 'regular',
+      trim: true,
+      default: '',
     },
   },
   {
     id: false,
     timestamps: true,
-    collection: 'users',
+    collection: 'auths',
     autoIndex: false,
     toJSON: {
       transform: (_doc, ret) => {
         const result = ret as Record<string, unknown>;
-
-        delete result.password;
+        delete result.token;
         delete result._id;
         delete result.__v;
-
         return result;
       },
     },
   },
 );
 
-export const UserModel: Model<DocumentUser> = model<DocumentUser>(
-  'User',
-  userSchema,
+export const AuthModel: Model<DocumentAuth> = model<DocumentAuth>(
+  'Auth',
+  authSchema,
 );

@@ -1,10 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import asyncHandler from 'express-async-handler';
+import { ZodError } from 'zod';
 import { BaseController } from '../../libs/controller/index.js';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
-import { AuthService } from './auth.service.js';
+import { AuthService, AuthError } from './auth.service.js';
+import { loginSchema } from './auth.dto.js';
+import { AUTH_CONSTANTS } from './auth.constant.js';
+import { extractBearerToken } from './../../helpers/auth.helpers.js';
 
 @injectable()
 export class AuthController extends BaseController {
@@ -20,27 +24,65 @@ export class AuthController extends BaseController {
   }
 
   private initRoutes(): void {
-    this.router.post(
-      '/login',
-      asyncHandler(async (req: Request, res: Response) => {
-        try {
-          const { email, password } = req.body;
-
-          if (!email || !password) {
-            this.badRequest(res, 'Email and password are required');
-            return;
-          }
-
-          const { token, user } = await this.authService.login(email, password);
-
-          this.ok(res, { token, user });
-        } catch (error) {
-          this.logger.warn(`AuthController: Login failed for ${req.body.email}`);
-          this.unauthorized(res, 'Invalid email or password');
-        }
-      }),
-    );
+    this.router.post('/login', asyncHandler(this.login));
+    this.router.post('/logout', asyncHandler(this.logout));
   }
+
+  private login = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const dto = loginSchema.parse(req.body);
+      const result = await this.authService.login(dto, {
+        userAgent: req.get('user-agent'),
+        ip: req.ip,
+      });
+
+      res.cookie(AUTH_CONSTANTS.COOKIE_NAME, result.token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: AUTH_CONSTANTS.COOKIE_MAX_AGE,
+      });
+
+      this.ok(res, result);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const message = error.issues.map((i) => i.message).join(', ') || 'Validation error';
+        this.badRequest(res, message);
+        return;
+      }
+
+      if (error instanceof AuthError) {
+        this.unauthorized(res, error.message);
+        return;
+      }
+
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`AuthController: login failed: ${msg}`);
+      this.internalServerError(res, 'Login failed');
+    }
+  };
+
+  private logout = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const token = extractBearerToken(req);
+      if (!token) {
+        this.unauthorized(res, 'Authorization token is required');
+        return;
+      }
+
+      const revoked = await this.authService.revoke(token);
+      if (!revoked) {
+        this.notFound(res, 'Active session not found');
+        return;
+      }
+
+      res.clearCookie(AUTH_CONSTANTS.COOKIE_NAME);
+      this.ok(res, { message: 'Logged out successfully' });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`AuthController: logout failed: ${msg}`);
+      this.internalServerError(res, 'Logout failed');
+    }
+  };
 
   public getRouter(): Router {
     return this.router;
