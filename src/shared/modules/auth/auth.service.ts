@@ -5,7 +5,7 @@ import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { RestConfig } from '../../libs/config/index.js';
 import { AuthRepository } from './auth.repository.interface.js';
-import { UserRepository } from '../user/user.repository.interface.js';
+import { UserService } from '../user/user.service.js';
 import { DocumentAuth } from './auth.entity.js';
 import { CreateAuthInput, PublicAuth } from './auth.interface.js';
 import { PublicUser } from '../user/user.interface.js';
@@ -21,7 +21,7 @@ export interface TokenPayload {
   email: string;
 }
 
-export class LoginError extends Error {
+export class AuthError extends Error {
   constructor(message: string) {
     super(message);
   }
@@ -32,7 +32,7 @@ export class AuthService {
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.AuthRepository) private readonly authRepository: AuthRepository,
-    @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
+    @inject(TYPES.UserService) private readonly userService: UserService,
     @inject(TYPES.Config) private readonly config: RestConfig,
   ) {}
 
@@ -42,14 +42,14 @@ export class AuthService {
   ): Promise<LoginResult> {
     this.logger.info(`AuthService: login attempt for ${dto.email}`);
 
-    const user = await this.userRepository.findByEmailForAuth(dto.email);
+    const user = await this.userService.findByEmailForAuth(dto.email);
     if (!user) {
-      throw new LoginError('Invalid email or password');
+      throw new AuthError('Invalid email or password');
     }
 
     const passwordMatch = await compare(dto.password, user.password);
     if (!passwordMatch) {
-      throw new LoginError('Invalid email or password');
+      throw new AuthError('Invalid email or password');
     }
 
     const secret = this.config.get('jwtSecret');
@@ -77,7 +77,7 @@ export class AuthService {
       ip: meta.ip,
     } satisfies CreateAuthInput);
 
-    const publicUser = this.toPublicUser(user);
+    const publicUser = this.userService.toPublicUser(user);
     this.logger.info(`AuthService: user ${user.id} logged in`);
 
     return { token, user: publicUser };
@@ -126,11 +126,5 @@ export class AuthService {
     const publicAuth = auth.toJSON() as Record<string, unknown>;
     delete publicAuth.token;
     return publicAuth as PublicAuth;
-  }
-
-  private toPublicUser(user: { toJSON: () => Record<string, unknown> }): PublicUser {
-    const obj = user.toJSON();
-    delete obj.password;
-    return obj as PublicUser;
   }
 }

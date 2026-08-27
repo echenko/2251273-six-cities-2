@@ -6,7 +6,7 @@ export interface OfferRepository extends Repository<DocumentOffer> {
   findById(id: string): Promise<DocumentOffer | null>;
   findByInternalId(internalId: string): Promise<DocumentOffer | null>;
   findByUserId(userId: string, limit?: number): Promise<DocumentOffer[]>;
-  findByCity(city: CityName): Promise<DocumentOffer[]>;
+  findByCity(city: CityName, limit?: number): Promise<DocumentOffer[]>;
   findAll(limit?: number): Promise<DocumentOffer[]>;
   deleteById(id: string): Promise<boolean>;
   create(dto: CreateOffer): Promise<DocumentOffer>;

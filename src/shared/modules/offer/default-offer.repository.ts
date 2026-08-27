@@ -8,9 +8,7 @@ import { CityName, CreateOffer } from './offer.interface.js';
 
 @injectable()
 export class DefaultOfferRepository implements OfferRepository {
-  constructor(
-    @inject(TYPES.Logger) private readonly logger: LoggerInterface,
-  ) {}
+  constructor(@inject(TYPES.Logger) private readonly logger: LoggerInterface) {}
 
   public async findById(id: string): Promise<DocumentOffer | null> {
     this.logger.debug(`DefaultOfferRepository: Searching for offer by public ID ${id}`);
@@ -31,19 +29,21 @@ export class DefaultOfferRepository implements OfferRepository {
     return offer.save();
   }
 
-  public async findByUserId(userId: string): Promise<DocumentOffer[]> {
+  public async findByUserId(userId: string, limit: number = 60): Promise<DocumentOffer[]> {
     this.logger.debug(`DefaultOfferRepository: Searching offers by user ID ${userId}`);
     return OfferModel.find({ user: userId })
       .populate('user')
       .sort({ createdAt: -1 })
+      .limit(limit)
       .exec();
   }
 
-  public async findByCity(city: CityName): Promise<DocumentOffer[]> {
+  public async findByCity(city: CityName, limit: number = 60): Promise<DocumentOffer[]> {
     this.logger.debug(`DefaultOfferRepository: Searching offers in city ${city}`);
     return OfferModel.find({ cityName: city })
       .populate('user')
       .sort({ createdAt: -1 })
+      .limit(limit)
       .exec();
   }
 
@@ -68,7 +68,7 @@ export class DefaultOfferRepository implements OfferRepository {
     commentsCount: number,
   ): Promise<DocumentOffer | null> {
     this.logger.debug(
-      `DefaultOfferRepository: Updating stats for offer ${offerId} (rating: ${rating}, comments: ${commentsCount})`,
+      `DefaultOfferRepository: Updating stats for offer ${offerId}`,
     );
     return OfferModel.findOneAndUpdate(
       { id: offerId },

@@ -10,7 +10,7 @@ export interface OfferService {
   create(publicUserId: string, dto: CreateOfferInput): Promise<DocumentOffer>;
   findById(id: string): Promise<DocumentOffer | null>;
   findAll(limit?: number): Promise<DocumentOffer[]>;
-  findByCity(city: CityName): Promise<DocumentOffer[]>;
+  findByCity(city: CityName, limit?: number): Promise<DocumentOffer[]>;
   findByUserId(publicUserId: string, limit?: number): Promise<DocumentOffer[]>;
   deleteById(id: string): Promise<boolean>;
 }
@@ -29,10 +29,7 @@ export class DefaultOfferService implements OfferService {
     if (!user) {
       throw new Error(`User with id ${publicUserId} not found`);
     }
-    return this.offerRepository.create({
-      ...dto,
-      user: user._id,
-    });
+    return this.offerRepository.create({ ...dto, user: user._id });
   }
 
   public async findById(id: string): Promise<DocumentOffer | null> {
@@ -43,8 +40,8 @@ export class DefaultOfferService implements OfferService {
     return this.offerRepository.findAll(limit);
   }
 
-  public async findByCity(city: CityName): Promise<DocumentOffer[]> {
-    return this.offerRepository.findByCity(city);
+  public async findByCity(city: CityName, limit?: number): Promise<DocumentOffer[]> {
+    return this.offerRepository.findByCity(city, limit);
   }
 
   public async findByUserId(publicUserId: string, limit: number = 60): Promise<DocumentOffer[]> {

@@ -4,7 +4,7 @@ import { BaseController } from '../../libs/controller/index.js';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { AuthService } from './auth.service.js';
-import { extractBearerToken } from '../../helpers/auth.helpers.js';
+import { extractBearerToken } from './../../helpers/auth.helpers.js';
 
 @injectable()
 export class AuthMiddleware extends BaseController {
