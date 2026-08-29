@@ -20,7 +20,7 @@
     "clean": "rimraf dist",
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
-    "start:rest": "node dist/main.rest.js",
+    "start:rest": "npm run docker:up && npm run build && node dist/main.rest.js",
     "start:cli": "node dist/main.cli.js",
     "dev:full": "npm run docker:up && concurrently -k -n \"API,MOCK\" -c \"cyan,yellow\" \"npm run dev:api\" \"npm run mock\"",
     "dev": "npm run docker:up && npm run dev:api"

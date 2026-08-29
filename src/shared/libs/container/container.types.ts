@@ -28,4 +28,6 @@ export const TYPES = {
   OfferController: Symbol.for('OfferController'),
   // Middleware
   AuthMiddleware: Symbol.for('AuthMiddleware'),
+  // Фильтры
+  ExceptionFilter: Symbol.for('ExceptionFilter'),
 };
