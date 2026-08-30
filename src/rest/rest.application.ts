@@ -6,10 +6,12 @@ import { LoggerInterface } from '../shared/libs/logger/logger.interface.js';
 import { RestConfig } from './../shared/libs/config/index.js';
 import { DatabaseClientInterface } from './../shared/libs/database/index.js';
 import { TYPES } from '../shared/libs/container/container.types.js';
-// Контроллеры
+
 import { AuthController } from './../shared/modules/auth/auth.controller.js';
 import { UserController } from '../shared/modules/user/user.controller.js';
 import { OfferController } from '../shared/modules/offer/offer.controller.js';
+import { CommentController } from '../shared/modules/comment/index.js';
+
 import { ExceptionFilter } from '../shared/libs/exception-filter/index.js';
 
 @injectable()
@@ -23,6 +25,7 @@ export class RestApplication {
     @inject(TYPES.AuthController) private readonly authController: AuthController,
     @inject(TYPES.UserController) private readonly userController: UserController,
     @inject(TYPES.OfferController) private readonly offerController: OfferController,
+    @inject(TYPES.CommentController) private readonly commentController: CommentController,
     @inject(TYPES.ExceptionFilter) private readonly exceptionFilter: ExceptionFilter,
   ) {
     this.app = express();
@@ -66,6 +69,8 @@ export class RestApplication {
     this.app.use('/auth', this.authController.getRouter());
     this.app.use('/users', this.userController.getRouter());
     this.app.use('/offers', this.offerController.getRouter());
+
+    this.app.use(this.commentController.getRouter());
 
     this.app.use((_req, res) => {
       res.status(404).json({

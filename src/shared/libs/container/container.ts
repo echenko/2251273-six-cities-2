@@ -14,6 +14,7 @@ import {
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
 import {
+  CommentController,
   CommentRepository,
   CommentService,
   DefaultCommentRepository,
@@ -56,6 +57,7 @@ container.bind<AuthService>(TYPES.AuthService).to(AuthService);
 container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
 container.bind<OfferController>(TYPES.OfferController).to(OfferController).inSingletonScope();
 container.bind<UserController>(TYPES.UserController).to(UserController).inSingletonScope();
+container.bind<CommentController>(TYPES.CommentController).to(CommentController).inSingletonScope();
 // Middleware
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
 // Filters

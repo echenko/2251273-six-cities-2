@@ -1,21 +1,30 @@
 import { injectable, inject } from 'inversify';
-import { Types } from 'mongoose';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
 import { CommentRepository } from './comment.repository.interface.js';
 import { OfferRepository } from '../offer/offer.repository.interface.js';
+import { UserRepository } from '../user/user.repository.interface.js';
 import { DocumentComment } from './comment.entity.js';
 import { CreateCommentInput } from './comment.interface.js';
+
+export class ForbiddenError extends Error {
+  public readonly status = 403;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'ForbiddenError';
+  }
+}
 
 export interface CommentService {
   create(
     publicOfferId: string,
     dto: CreateCommentInput,
-    userId: string,
+    publicUserId: string,
   ): Promise<DocumentComment>;
-  findByOfferId(publicOfferId: string): Promise<DocumentComment[]>;
+  findByOfferId(publicOfferId: string, limit?: number): Promise<DocumentComment[]>;
   findById(id: string): Promise<DocumentComment | null>;
-  deleteById(id: string): Promise<boolean>;
+  deleteById(id: string, publicUserId: string): Promise<boolean>;
 }
 
 @injectable()
@@ -24,12 +33,13 @@ export class DefaultCommentService implements CommentService {
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.CommentRepository) private readonly commentRepository: CommentRepository,
     @inject(TYPES.OfferRepository) private readonly offerRepository: OfferRepository,
+    @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
   ) {}
 
   public async create(
     publicOfferId: string,
     dto: CreateCommentInput,
-    userId: string,
+    publicUserId: string,
   ): Promise<DocumentComment> {
     this.logger.info(`DefaultCommentService: Creating comment for offer ${publicOfferId}`);
 
@@ -38,19 +48,27 @@ export class DefaultCommentService implements CommentService {
       throw new Error(`Offer with id ${publicOfferId} not found`);
     }
 
+    const user = await this.userRepository.findById(publicUserId);
+    if (!user) {
+      throw new Error(`User with id ${publicUserId} not found`);
+    }
+
     const comment = await this.commentRepository.create({
       text: dto.text,
       rating: dto.rating,
       offer: offer._id,
-      user: new Types.ObjectId(userId),
+      user: user._id,
     });
 
     await this.recalculateOfferStats(offer._id.toString());
 
-    return comment;
+    return this.commentRepository.findById(comment.id) as Promise<DocumentComment>;
   }
 
-  public async findByOfferId(publicOfferId: string): Promise<DocumentComment[]> {
+  public async findByOfferId(
+    publicOfferId: string,
+    limit: number = 50,
+  ): Promise<DocumentComment[]> {
     this.logger.debug(`DefaultCommentService: Finding comments for offer ${publicOfferId}`);
 
     const offer = await this.offerRepository.findById(publicOfferId);
@@ -58,7 +76,8 @@ export class DefaultCommentService implements CommentService {
       throw new Error(`Offer with id ${publicOfferId} not found`);
     }
 
-    return this.commentRepository.findByOfferId(offer._id.toString());
+    const comments = await this.commentRepository.findByOfferId(offer._id.toString());
+    return comments.slice(0, limit);
   }
 
   public async findById(id: string): Promise<DocumentComment | null> {
@@ -66,7 +85,7 @@ export class DefaultCommentService implements CommentService {
     return this.commentRepository.findById(id);
   }
 
-  public async deleteById(id: string): Promise<boolean> {
+  public async deleteById(id: string, publicUserId: string): Promise<boolean> {
     this.logger.info(`DefaultCommentService: Deleting comment ${id}`);
 
     const comment = await this.commentRepository.findById(id);
@@ -74,8 +93,17 @@ export class DefaultCommentService implements CommentService {
       return false;
     }
 
-    const offerInternalId = comment.offer.toString();
+    const user = await this.userRepository.findById(publicUserId);
+    if (!user) {
+      throw new Error(`User with id ${publicUserId} not found`);
+    }
 
+    const commentUserId = comment.user.toString();
+    if (commentUserId !== user._id.toString()) {
+      throw new ForbiddenError('You can only delete your own comments');
+    }
+
+    const offerInternalId = comment.offer.toString();
     const result = await this.commentRepository.deleteById(id);
 
     if (result) {
@@ -86,13 +114,10 @@ export class DefaultCommentService implements CommentService {
   }
 
   private async recalculateOfferStats(offerInternalId: string): Promise<void> {
-
     const comments = await this.commentRepository.findByOfferId(offerInternalId);
-
     const rating = comments.length > 0
       ? comments.reduce((sum, c) => sum + c.rating, 0) / comments.length
       : 0;
-
     const commentsCount = comments.length;
 
     this.logger.debug(

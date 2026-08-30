@@ -26,6 +26,7 @@ export const TYPES = {
   UserController: Symbol.for('UserController'),
   AuthController: Symbol.for('AuthController'),
   OfferController: Symbol.for('OfferController'),
+  CommentController: Symbol.for('CommentController'),
   // Middleware
   AuthMiddleware: Symbol.for('AuthMiddleware'),
   // Фильтры
