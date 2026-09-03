@@ -14,6 +14,7 @@ import {
 } from './../../../cli/commands/index.js';
 import { CliApplication } from '../../../cli/index.js';
 import {
+  CommentController,
   CommentRepository,
   CommentService,
   DefaultCommentRepository,
@@ -26,6 +27,7 @@ import { AuthController } from '../../modules/auth/auth.controller.js';
 import { UserController } from '../../modules/user/user.controller.js';
 import { AuthMiddleware, AuthRepository, DefaultAuthRepository } from '../../modules/auth/index.js';
 import { OfferController } from '../../modules/offer/offer.controller.js';
+import { ExceptionFilter } from '../exception-filter/index.js';
 
 const container = new Container();
 // Общие зависимости
@@ -55,7 +57,10 @@ container.bind<AuthService>(TYPES.AuthService).to(AuthService);
 container.bind<AuthController>(TYPES.AuthController).to(AuthController).inSingletonScope();
 container.bind<OfferController>(TYPES.OfferController).to(OfferController).inSingletonScope();
 container.bind<UserController>(TYPES.UserController).to(UserController).inSingletonScope();
+container.bind<CommentController>(TYPES.CommentController).to(CommentController).inSingletonScope();
 // Middleware
 container.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
+// Filters
+container.bind<ExceptionFilter>(TYPES.ExceptionFilter).to(ExceptionFilter).inSingletonScope();
 
 export { container };

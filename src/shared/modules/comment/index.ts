@@ -3,3 +3,5 @@ export * from './comment.interface.js';
 export * from './comment.repository.interface.js';
 export * from './default-comment.repository.js';
 export * from './comment.service.js';
+export * from './comment.controller.js';
+export * from './comment.dto.js';
