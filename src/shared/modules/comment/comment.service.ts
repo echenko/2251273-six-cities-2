@@ -7,12 +7,10 @@ import { UserRepository } from '../user/user.repository.interface.js';
 import { DocumentComment } from './comment.entity.js';
 import { CreateCommentInput } from './comment.interface.js';
 
-export class ForbiddenError extends Error {
-  public readonly status = 403;
-
+export class CommentAccessDeniedError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ForbiddenError';
+    this.name = 'CommentAccessDeniedError';
   }
 }
 
@@ -100,7 +98,7 @@ export class DefaultCommentService implements CommentService {
 
     const commentUserId = comment.user.toString();
     if (commentUserId !== user._id.toString()) {
-      throw new ForbiddenError('You can only delete your own comments');
+      throw new CommentAccessDeniedError('You can only delete your own comments');
     }
 
     const offerInternalId = comment.offer.toString();

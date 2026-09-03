@@ -5,7 +5,7 @@ import { ZodError } from 'zod';
 import { BaseController } from '../../libs/controller/index.js';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
-import { CommentService, ForbiddenError } from './comment.service.js';
+import { CommentService, CommentAccessDeniedError } from './comment.service.js';
 import { createCommentSchema } from './comment.dto.js';
 import { AuthMiddleware } from '../auth/auth.middleware.js';
 
@@ -31,13 +31,11 @@ export class CommentController extends BaseController {
       '/offers/:offerId/comments',
       asyncHandler(this.getByOfferId),
     );
-
     this.router.post(
       '/offers/:offerId/comments',
       this.authMiddleware.execute,
       asyncHandler(this.create),
     );
-
     this.router.delete(
       '/offers/:offerId/comments/:commentId',
       this.authMiddleware.execute,
@@ -117,7 +115,7 @@ export class CommentController extends BaseController {
       this.logger.info(`CommentController: Comment ${commentId} deleted by user ${userId}`);
       this.noContent(res);
     } catch (error) {
-      if (error instanceof ForbiddenError) {
+      if (error instanceof CommentAccessDeniedError) {
         this.forbidden(res, error.message);
         return;
       }
