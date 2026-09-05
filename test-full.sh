@@ -150,8 +150,8 @@ check "$RESP" "200" "GET /offers?city=Paris — Фильтрация"
 RESP=$(do_req -X GET "$BASE_URL/offers/$OFFER_ID")
 check "$RESP" "200" "GET /offers/:id — Получение оффера"
 
-RESP=$(do_req -X GET "$BASE_URL/offers/users/$USER_ID?limit=5")
-check "$RESP" "200" "GET /offers/users/:id — Офферы пользователя"
+RESP=$(do_req -X GET "$BASE_URL/users/$USER_ID/offers?limit=5")
+check "$RESP" "200" "GET /users/:userId/offers — Офферы пользователя"
 
 # =========================================================================
 # 4. КОММЕНТАРИИ (Comments)

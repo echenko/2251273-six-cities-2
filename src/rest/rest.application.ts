@@ -60,9 +60,10 @@ export class RestApplication {
 
   private initRoutes(): void {
     this.app.use('/auth', this.authController.getRouter());
+
     this.app.use('/users', this.userController.getRouter());
 
-    this.app.use('/offers', this.offerController.getRouter());
+    this.app.use(this.offerController.getRouter());
 
     this.app.use('/offers', this.commentController.getRouter());
 

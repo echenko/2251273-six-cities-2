@@ -10,7 +10,7 @@ import { ValidateDtoMiddleware } from '../../libs/middleware/validate-dto.middle
 import { UserService } from './user.service.js';
 import { createUserSchema } from './user.dto.js';
 
-type ParamId = { id: string };
+type ParamUserId = { userId: string };
 
 @injectable()
 export class UserController extends BaseController {
@@ -28,15 +28,15 @@ export class UserController extends BaseController {
       HttpMethod.Post,
       '/',
       this.create,
-      [new ValidateDtoMiddleware(createUserSchema)],
+      [new ValidateDtoMiddleware(createUserSchema)]
     );
 
-    // GET /users/:id — получение пользователя по ID
+    // ✅ GET /users/:userId — получение пользователя по ID
     this.addRoute(
       HttpMethod.Get,
-      '/:id',
+      '/:userId',
       this.show,
-      [new ValidateObjectIdMiddleware('id')],
+      [new ValidateObjectIdMiddleware('userId')]
     );
   }
 
@@ -65,12 +65,15 @@ export class UserController extends BaseController {
     }
   };
 
-  private show = async (req: Request<ParamId>, res: Response): Promise<void> => {
+  /**
+   * Получение пользователя по ID.
+   */
+  private show = async (req: Request<ParamUserId>, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
-      const user = await this.userService.findById(id.trim());
+      const { userId } = req.params;
+      const user = await this.userService.findById(userId.trim());
       if (!user) {
-        this.notFound(res, `User with id ${id} not found`);
+        this.notFound(res, `User with id ${userId} not found`);
         return;
       }
       this.ok(res, user);

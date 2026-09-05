@@ -11,7 +11,7 @@ import { createOfferSchema } from './offer.dto.js';
 import { AuthMiddleware } from '../auth/auth.middleware.js';
 import { CityName } from './offer.interface.js';
 
-type ParamId = { id: string };
+type ParamOfferId = { offerId: string };
 type ParamUserId = { userId: string };
 
 @injectable()
@@ -26,28 +26,79 @@ export class OfferController extends BaseController {
   }
 
   private initRoutes(): void {
-    this.addRoute(HttpMethod.Get, '/', this.index);
-    this.addRoute(HttpMethod.Get, '/users/:userId', this.getByUserId, [new ValidateObjectIdMiddleware('userId')]);
-    this.addRoute(HttpMethod.Get, '/:id', this.show, [new ValidateObjectIdMiddleware('id')]);
-    this.addRoute(HttpMethod.Post, '/', this.create, [this.authMiddleware, new ValidateDtoMiddleware(createOfferSchema)]);
-    this.addRoute(HttpMethod.Delete, '/:id', this.delete, [this.authMiddleware, new ValidateObjectIdMiddleware('id')]);
+    // ✅ GET /offers — список всех офферов
+    this.addRoute(HttpMethod.Get, '/offers', this.index);
+
+    // ✅ GET /users/:userId/offers — офферы конкретного пользователя
+    this.addRoute(
+      HttpMethod.Get,
+      '/users/:userId/offers',
+      this.getByUserId,
+      [new ValidateObjectIdMiddleware('userId')]
+    );
+
+    // ✅ GET /offers/:offerId — получение оффера по ID
+    this.addRoute(
+      HttpMethod.Get,
+      '/offers/:offerId',
+      this.show,
+      [new ValidateObjectIdMiddleware('offerId')]
+    );
+
+    // ✅ POST /offers — создание оффера
+    this.addRoute(
+      HttpMethod.Post,
+      '/offers',
+      this.create,
+      [
+        this.authMiddleware,
+        new ValidateDtoMiddleware(createOfferSchema),
+      ]
+    );
+
+    // ✅ DELETE /offers/:offerId — удаление оффера
+    this.addRoute(
+      HttpMethod.Delete,
+      '/offers/:offerId',
+      this.delete,
+      [
+        this.authMiddleware,
+        new ValidateObjectIdMiddleware('offerId'),
+      ]
+    );
   }
 
+  /**
+   * Получение списка всех офферов с фильтрацией по городу и лимитом.
+   */
   private index = async (req: Request, res: Response): Promise<void> => {
     const limitParam = req.query.limit ? Number(req.query.limit) : 60;
     const limit = Math.min(Math.max(1, limitParam), 100);
+
     const cityQuery = req.query.city as string | undefined;
     const validCities: CityName[] = ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'];
-    const city = cityQuery && validCities.includes(cityQuery as CityName) ? (cityQuery as CityName) : undefined;
+    const city = cityQuery && validCities.includes(cityQuery as CityName)
+      ? (cityQuery as CityName)
+      : undefined;
 
-    const offers = city ? await this.offerService.findByCity(city, limit) : await this.offerService.findAll(limit);
+    const offers = city
+      ? await this.offerService.findByCity(city, limit)
+      : await this.offerService.findAll(limit);
+
     this.ok(res, offers);
   };
 
-  private getByUserId = async (req: Request<ParamUserId>, res: Response): Promise<void> => {
+  /**
+   * Получение офферов конкретного пользователя.
+   */
+  private getByUserId = async (
+    req: Request<ParamUserId>,
+    res: Response,
+  ): Promise<void> => {
     const { userId } = req.params;
     const limitParam = req.query.limit ? Number(req.query.limit) : 60;
     const limit = Math.min(Math.max(1, limitParam), 100);
+
     try {
       const offers = await this.offerService.findByUserId(userId, limit);
       this.ok(res, offers);
@@ -60,16 +111,22 @@ export class OfferController extends BaseController {
     }
   };
 
-  private show = async (req: Request<ParamId>, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const offer = await this.offerService.findById(id);
+  /**
+   * Получение оффера по ID.
+   */
+  private show = async (req: Request<ParamOfferId>, res: Response): Promise<void> => {
+    const { offerId } = req.params;
+    const offer = await this.offerService.findById(offerId);
     if (!offer) {
-      this.notFound(res, `Offer with id ${id} not found`);
+      this.notFound(res, `Offer with id ${offerId} not found`);
       return;
     }
     this.ok(res, offer);
   };
 
+  /**
+   * Создание нового оффера.
+   */
   private create = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = req.tokenUserId;
@@ -77,6 +134,7 @@ export class OfferController extends BaseController {
         this.unauthorized(res, 'User is not authenticated');
         return;
       }
+
       const dto = req.body;
       const offer = await this.offerService.create(userId, dto);
       this.logger.info(`OfferController: Offer created with id ${offer.id}`);
@@ -92,20 +150,25 @@ export class OfferController extends BaseController {
     }
   };
 
-  private delete = async (req: Request<ParamId>, res: Response): Promise<void> => {
+  /**
+   * Удаление оффера.
+   */
+  private delete = async (req: Request<ParamOfferId>, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
-      const offer = await this.offerService.findById(id);
+      const { offerId } = req.params;
+      const offer = await this.offerService.findById(offerId);
       if (!offer) {
-        this.notFound(res, `Offer with id ${id} not found`);
+        this.notFound(res, `Offer with id ${offerId} not found`);
         return;
       }
-      const isDeleted = await this.offerService.deleteById(id);
+
+      const isDeleted = await this.offerService.deleteById(offerId);
       if (!isDeleted) {
-        this.notFound(res, `Offer with id ${id} not found`);
+        this.notFound(res, `Offer with id ${offerId} not found`);
         return;
       }
-      this.logger.info(`OfferController: Offer ${id} deleted`);
+
+      this.logger.info(`OfferController: Offer ${offerId} deleted`);
       this.noContent(res);
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
