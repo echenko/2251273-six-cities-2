@@ -1,7 +1,7 @@
 #!/bin/bash
 # ============================================================================
 # 🧪 Автоматическое тестирование REST API «Шесть городов»
-# Полностью соответствует specification.yml
+# Полностью соответствует specification.yml + тест загрузки аватара
 # ============================================================================
 
 BASE_URL="${API_URL:-http://localhost:3000}"
@@ -114,6 +114,27 @@ check_status "$RESPONSE" "200" "POST /auth/login — успешный вход"
 TOKEN=$(extract_value "$RESPONSE" "token")
 echo -e "   └─ Token: ${YELLOW}${TOKEN:0:40}...${NC}"
 
+# ✅ НОВЫЙ ТЕСТ: Загрузка аватара
+echo -e "${BLUE}📋 ТЕСТ 6.1: Загрузка аватара пользователя${NC}"
+# Создаем минимальный валидный PNG файл (1x1 пиксель) во временной директории
+TEST_AVATAR=$(mktemp /tmp/avatar-XXXXXX.png)
+printf '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82' > "$TEST_AVATAR"
+
+RESPONSE_AVATAR=$(do_request -X POST "$BASE_URL/users/$USER_ID/avatar" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "avatar=@$TEST_AVATAR")
+check_status "$RESPONSE_AVATAR" "200" "POST /users/:userId/avatar — загрузка аватара"
+
+AVATAR_URL=$(extract_value "$RESPONSE_AVATAR" "avatarUrl")
+if [ -n "$AVATAR_URL" ]; then
+  echo -e "   └─ Avatar URL: ${YELLOW}$AVATAR_URL${NC}"
+else
+  echo -e "${RED}   └─ Avatar URL не найден в ответе${NC}"
+fi
+
+# Очищаем временный файл
+rm -f "$TEST_AVATAR"
+
 echo -e "${BLUE}📋 ТЕСТ 7: Вход с неверным паролем${NC}"
 RESPONSE=$(do_request -X POST "$BASE_URL/auth/login" \
   -H "Content-Type: application/json" \
@@ -166,7 +187,6 @@ echo -e "${BLUE}📋 ТЕСТ 12: Получение оффера по ID${NC}"
 RESPONSE=$(do_request -X GET "$BASE_URL/offers/$OFFER_ID")
 check_status "$RESPONSE" "200" "GET /offers/:offerId — получение оффера"
 
-# ✅ ИСПРАВЛЕНО: маршрут теперь соответствует спецификации GET /users/{userId}/offers
 echo -e "${BLUE}📋 ТЕСТ 13: Офферы конкретного пользователя${NC}"
 RESPONSE=$(do_request -X GET "$BASE_URL/users/$USER_ID/offers?limit=10")
 check_status "$RESPONSE" "200" "GET /users/:userId/offers — офферы пользователя"
@@ -192,7 +212,6 @@ echo -e "${BLUE}📋 ТЕСТ 16: Получение комментариев к
 RESPONSE=$(do_request -X GET "$BASE_URL/offers/$OFFER_ID/comments?limit=10")
 check_status "$RESPONSE" "200" "GET /offers/:offerId/comments — список комментариев"
 
-# ✅ ИСПРАВЛЕНО: используем валидный UUID (иначе middleware вернет 400)
 echo -e "${BLUE}📋 ТЕСТ 17: Комментарии несуществующего оффера${NC}"
 RESPONSE=$(do_request -X GET "$BASE_URL/offers/00000000-0000-0000-0000-000000000000/comments")
 check_status "$RESPONSE" "404" "GET /offers/:offerId/comments — оффер не найден"
@@ -202,7 +221,6 @@ RESPONSE=$(do_request -X DELETE "$BASE_URL/offers/$OFFER_ID/comments/$COMMENT_ID
   -H "Authorization: Bearer $TOKEN")
 check_status "$RESPONSE" "204" "DELETE /offers/:offerId/comments/:commentId — удаление комментария"
 
-# ✅ ИСПРАВЛЕНО: используем валидный UUID
 echo -e "${BLUE}📋 ТЕСТ 19: Удаление несуществующего комментария${NC}"
 RESPONSE=$(do_request -X DELETE "$BASE_URL/offers/$OFFER_ID/comments/00000000-0000-0000-0000-000000000000" \
   -H "Authorization: Bearer $TOKEN")

@@ -51,6 +51,11 @@ export class RestApplication {
     this.app.use(cors());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+
+    // ✅ ДОБАВЛЕНО: Раздача статических файлов
+    const uploadDir = this.config.get('uploadDirectory');
+    this.app.use('/upload', express.static(uploadDir));
+
     this.app.use((req, _res, next) => {
       this.logger.info(`--${req.method} ${req.url}`);
       next();

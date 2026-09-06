@@ -9,6 +9,8 @@ import { ValidateObjectIdMiddleware } from '../../libs/middleware/validate-objec
 import { ValidateDtoMiddleware } from '../../libs/middleware/validate-dto.middleware.js';
 import { UserService } from './user.service.js';
 import { createUserSchema } from './user.dto.js';
+import { RestConfig } from '../../libs/config/index.js';
+import { FileMiddleware } from '../../libs/middleware/file.middleware.js';
 
 type ParamUserId = { userId: string };
 
@@ -17,6 +19,7 @@ export class UserController extends BaseController {
   constructor(
     @inject(TYPES.Logger) protected override readonly logger: LoggerInterface,
     @inject(TYPES.UserService) private readonly userService: UserService,
+    @inject(TYPES.Config) private readonly config: RestConfig,
   ) {
     super(logger);
     this.initRoutes();
@@ -31,12 +34,23 @@ export class UserController extends BaseController {
       [new ValidateDtoMiddleware(createUserSchema)]
     );
 
-    // ✅ GET /users/:userId — получение пользователя по ID
+    // GET /users/:userId — получение пользователя по ID
     this.addRoute(
       HttpMethod.Get,
       '/:userId',
       this.show,
       [new ValidateObjectIdMiddleware('userId')]
+    );
+
+    // POST /users/:userId/avatar — загрузка аватара
+    this.addRoute(
+      HttpMethod.Post,
+      '/:userId/avatar',
+      this.uploadAvatar,
+      [
+        new ValidateObjectIdMiddleware('userId'),
+        new FileMiddleware(this.config.get('uploadDirectory'), 'avatar', 1024 * 1024),
+      ]
     );
   }
 
@@ -81,6 +95,30 @@ export class UserController extends BaseController {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`UserController: Unexpected error: ${errorMessage}`);
       this.internalServerError(res, 'Failed to get user');
+    }
+  };
+
+  /**
+   * Загрузка аватара пользователя.
+   */
+  private uploadAvatar = async (req: Request<ParamUserId>, res: Response): Promise<void> => {
+    // Приведение типа нужно, чтобы TypeScript знал о существовании req.file от multer
+    const reqWithFile = req as Request & { file?: Express.Multer.File };
+
+    if (!reqWithFile.file) {
+      this.badRequest(res, 'No file uploaded');
+      return;
+    }
+
+    try {
+      const { userId } = req.params;
+      const avatarUrl = `/upload/${reqWithFile.file.filename}`;
+      const updatedUser = await this.userService.updateAvatar(userId, avatarUrl);
+      this.ok(res, updatedUser);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`UserController: uploadAvatar failed: ${msg}`);
+      this.internalServerError(res, 'Failed to upload avatar');
     }
   };
 }
