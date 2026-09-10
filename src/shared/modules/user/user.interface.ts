@@ -19,3 +19,8 @@ export interface CreateUserInput {
   password: string;
   avatarUrl?: string;
 }
+
+export interface UpdateUser {
+  avatarUrl?: string;
+  name?: string;
+}

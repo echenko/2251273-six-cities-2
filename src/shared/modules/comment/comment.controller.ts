@@ -1,12 +1,14 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import asyncHandler from 'express-async-handler';
-import { ZodError } from 'zod';
 import { BaseController } from '../../libs/controller/index.js';
+import { HttpMethod } from '../../libs/controller/http-method.enum.js';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
+import { ValidateObjectIdMiddleware } from '../../libs/middleware/validate-objectid.middleware.js';
+import { ValidateDtoMiddleware } from '../../libs/middleware/validate-dto.middleware.js';
 import { CommentService, CommentAccessDeniedError } from './comment.service.js';
 import { createCommentSchema } from './comment.dto.js';
+import { CreateCommentInput } from './comment.interface.js';
 import { AuthMiddleware } from '../auth/auth.middleware.js';
 
 type ParamOfferId = { offerId: string };
@@ -14,36 +16,49 @@ type ParamOfferAndCommentId = { offerId: string; commentId: string };
 
 @injectable()
 export class CommentController extends BaseController {
-  private readonly router: Router;
-
   constructor(
     @inject(TYPES.Logger) protected override readonly logger: LoggerInterface,
     @inject(TYPES.CommentService) private readonly commentService: CommentService,
     @inject(TYPES.AuthMiddleware) private readonly authMiddleware: AuthMiddleware,
   ) {
     super(logger);
-    this.router = Router();
     this.initRoutes();
   }
 
   private initRoutes(): void {
-    this.router.get(
-      '/offers/:offerId/comments',
-      asyncHandler(this.getByOfferId),
+    // GET /offers/:offerId/comments
+    this.addRoute(
+      HttpMethod.Get,
+      '/:offerId/comments',
+      this.index,
+      [new ValidateObjectIdMiddleware('offerId')],
     );
-    this.router.post(
-      '/offers/:offerId/comments',
-      this.authMiddleware.execute,
-      asyncHandler(this.create),
+
+    // POST /offers/:offerId/comments
+    this.addRoute(
+      HttpMethod.Post,
+      '/:offerId/comments',
+      this.create,
+      [
+        this.authMiddleware,
+        new ValidateDtoMiddleware(createCommentSchema),
+      ],
     );
-    this.router.delete(
-      '/offers/:offerId/comments/:commentId',
-      this.authMiddleware.execute,
-      asyncHandler(this.delete),
+
+    // DELETE /offers/:offerId/comments/:commentId
+    this.addRoute(
+      HttpMethod.Delete,
+      '/:offerId/comments/:commentId',
+      this.delete,
+      [
+        this.authMiddleware,
+        new ValidateObjectIdMiddleware('offerId'),
+        new ValidateObjectIdMiddleware('commentId'),
+      ],
     );
   }
 
-  private getByOfferId = async (
+  private index = async (
     req: Request<ParamOfferId>,
     res: Response,
   ): Promise<void> => {
@@ -63,26 +78,24 @@ export class CommentController extends BaseController {
     }
   };
 
-  private create = async (req: Request<ParamOfferId>, res: Response): Promise<void> => {
+  private create = async (
+    req: Request<ParamOfferId>,
+    res: Response,
+  ): Promise<void> => {
+    const { offerId } = req.params;
+    const body = req.body as CreateCommentInput;
+    const userId = req.tokenUserId;
+
+    if (!userId) {
+      this.unauthorized(res, 'User is not authenticated');
+      return;
+    }
+
     try {
-      const { offerId } = req.params;
-      const dto = createCommentSchema.parse(req.body);
-      const userId = req.tokenUserId;
-
-      if (!userId) {
-        this.unauthorized(res, 'User is not authenticated');
-        return;
-      }
-
-      const comment = await this.commentService.create(offerId, dto, userId);
+      const comment = await this.commentService.create(offerId, body, userId);
       this.logger.info(`CommentController: Comment created with id ${comment.id}`);
       this.created(res, comment);
     } catch (error) {
-      if (error instanceof ZodError) {
-        const message = error.issues.map((i) => i.message).join(', ') || 'Validation error';
-        this.badRequest(res, message);
-        return;
-      }
       if (error instanceof Error && error.message.includes('not found')) {
         this.notFound(res, error.message);
         return;
@@ -97,21 +110,20 @@ export class CommentController extends BaseController {
     req: Request<ParamOfferAndCommentId>,
     res: Response,
   ): Promise<void> => {
+    const { commentId } = req.params;
+    const userId = req.tokenUserId;
+
+    if (!userId) {
+      this.unauthorized(res, 'User is not authenticated');
+      return;
+    }
+
     try {
-      const { commentId } = req.params;
-      const userId = req.tokenUserId;
-
-      if (!userId) {
-        this.unauthorized(res, 'User is not authenticated');
-        return;
-      }
-
       const isDeleted = await this.commentService.deleteById(commentId, userId);
       if (!isDeleted) {
         this.notFound(res, `Comment with id ${commentId} not found`);
         return;
       }
-
       this.logger.info(`CommentController: Comment ${commentId} deleted by user ${userId}`);
       this.noContent(res);
     } catch (error) {
@@ -124,8 +136,4 @@ export class CommentController extends BaseController {
       this.internalServerError(res, 'Failed to delete comment');
     }
   };
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }

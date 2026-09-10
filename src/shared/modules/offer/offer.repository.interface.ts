@@ -1,8 +1,9 @@
 import { Repository } from '../../libs/repository/repository.interface.js';
+import { ExistsChecker } from '../../libs/middleware/exists-checker.interface.js';
 import { DocumentOffer } from './offer.entity.js';
 import { CityName, CreateOffer } from './offer.interface.js';
 
-export interface OfferRepository extends Repository<DocumentOffer> {
+export interface OfferRepository extends Repository<DocumentOffer>, ExistsChecker {
   findById(id: string): Promise<DocumentOffer | null>;
   findByInternalId(internalId: string): Promise<DocumentOffer | null>;
   findByUserId(userId: string, limit?: number): Promise<DocumentOffer[]>;
@@ -11,4 +12,5 @@ export interface OfferRepository extends Repository<DocumentOffer> {
   deleteById(id: string): Promise<boolean>;
   create(dto: CreateOffer): Promise<DocumentOffer>;
   updateStats(offerId: string, rating: number, commentsCount: number): Promise<DocumentOffer | null>;
+  existsById(id: string): Promise<boolean>;
 }

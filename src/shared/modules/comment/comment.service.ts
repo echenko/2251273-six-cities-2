@@ -7,6 +7,10 @@ import { UserRepository } from '../user/user.repository.interface.js';
 import { DocumentComment } from './comment.entity.js';
 import { CreateCommentInput } from './comment.interface.js';
 
+/**
+ * Бизнес-ошибка: попытка удалить чужой комментарий.
+ * Не содержит HTTP-статуса — сервис не знает о транспорте.
+ */
 export class CommentAccessDeniedError extends Error {
   constructor(message: string) {
     super(message);
@@ -60,7 +64,10 @@ export class DefaultCommentService implements CommentService {
 
     await this.recalculateOfferStats(offer._id.toString());
 
-    return this.commentRepository.findById(comment.id) as Promise<DocumentComment>;
+    // ✅ ИСПРАВЛЕНИЕ: Возвращаем созданный документ напрямую, БЕЗ populate.
+    // Это гарантирует, что в JSON-ответе будет только один корневой "id",
+    // что критически важно для корректного парсинга в bash-скриптах.
+    return comment;
   }
 
   public async findByOfferId(
@@ -96,12 +103,17 @@ export class DefaultCommentService implements CommentService {
       throw new Error(`User with id ${publicUserId} not found`);
     }
 
-    const commentUserId = comment.user.toString();
+    // ✅ ИСПРАВЛЕНИЕ: Явно обращаемся к ._id populated документа.
+    // После populate('user') поле comment.user — это Mongoose Document,
+    // и .toString() на нём может вернуть не ObjectId, а JSON всего объекта.
+    // Использование ._id гарантирует, что мы получим именно ObjectId автора.
+    const commentUserId = (comment.user as { _id: { toString(): string } })._id.toString();
+
     if (commentUserId !== user._id.toString()) {
       throw new CommentAccessDeniedError('You can only delete your own comments');
     }
 
-    const offerInternalId = comment.offer.toString();
+    const offerInternalId = (comment.offer as { _id: { toString(): string } })._id.toString();
     const result = await this.commentRepository.deleteById(id);
 
     if (result) {

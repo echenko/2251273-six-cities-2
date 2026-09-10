@@ -31,29 +31,17 @@ export class DefaultOfferRepository implements OfferRepository {
 
   public async findByUserId(userId: string, limit: number = 60): Promise<DocumentOffer[]> {
     this.logger.debug(`DefaultOfferRepository: Searching offers by user ID ${userId}`);
-    return OfferModel.find({ user: userId })
-      .populate('user')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .exec();
+    return OfferModel.find({ user: userId }).populate('user').sort({ createdAt: -1 }).limit(limit).exec();
   }
 
   public async findByCity(city: CityName, limit: number = 60): Promise<DocumentOffer[]> {
     this.logger.debug(`DefaultOfferRepository: Searching offers in city ${city}`);
-    return OfferModel.find({ cityName: city })
-      .populate('user')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .exec();
+    return OfferModel.find({ cityName: city }).populate('user').sort({ createdAt: -1 }).limit(limit).exec();
   }
 
   public async findAll(limit: number = 60): Promise<DocumentOffer[]> {
     this.logger.debug(`DefaultOfferRepository: Fetching all offers (limit: ${limit})`);
-    return OfferModel.find()
-      .populate('user')
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .exec();
+    return OfferModel.find().populate('user').sort({ createdAt: -1 }).limit(limit).exec();
   }
 
   public async deleteById(id: string): Promise<boolean> {
@@ -62,20 +50,13 @@ export class DefaultOfferRepository implements OfferRepository {
     return result.deletedCount > 0;
   }
 
-  public async updateStats(
-    offerId: string,
-    rating: number,
-    commentsCount: number,
-  ): Promise<DocumentOffer | null> {
-    this.logger.debug(
-      `DefaultOfferRepository: Updating stats for offer ${offerId}`,
-    );
-    return OfferModel.findOneAndUpdate(
-      { id: offerId },
-      { rating, commentsCount },
-      { new: true },
-    )
-      .populate('user')
-      .exec();
+  public async updateStats(offerId: string, rating: number, commentsCount: number): Promise<DocumentOffer | null> {
+    this.logger.debug(`DefaultOfferRepository: Updating stats for offer ${offerId}`);
+    return OfferModel.findOneAndUpdate({ id: offerId }, { rating, commentsCount }, { returnDocument: 'after' },).populate('user').exec();
+  }
+
+  public async existsById(id: string): Promise<boolean> {
+    const count = await OfferModel.countDocuments({ id }).exec();
+    return count > 0;
   }
 }

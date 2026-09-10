@@ -10,10 +10,11 @@ const SALT_ROUNDS = 10;
 
 @injectable()
 export class UserService {
+
   constructor(
     @inject(TYPES.Logger) private readonly logger: LoggerInterface,
     @inject(TYPES.UserRepository) private readonly userRepository: UserRepository,
-  ) {}
+  ) { }
 
   public async create(dto: CreateUserInput): Promise<PublicUser> {
     this.logger.info('UserService: Creating new user');
@@ -45,5 +46,10 @@ export class UserService {
     const publicUser = user.toJSON() as Record<string, unknown>;
     delete publicUser.password;
     return publicUser as PublicUser;
+  }
+
+  public async updateAvatar(userId: string, avatarUrl: string): Promise<PublicUser | null> {
+    const user = await this.userRepository.updateById(userId, { avatarUrl });
+    return user ? this.toPublicUser(user) : null;
   }
 }

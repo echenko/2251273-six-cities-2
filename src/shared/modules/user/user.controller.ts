@@ -1,36 +1,65 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import asyncHandler from 'express-async-handler';
 import { ZodError } from 'zod';
 import { BaseController } from '../../libs/controller/index.js';
+import { HttpMethod } from '../../libs/controller/http-method.enum.js';
 import { TYPES } from '../../libs/container/container.types.js';
 import { LoggerInterface } from '../../libs/logger/logger.interface.js';
+import { ValidateObjectIdMiddleware } from '../../libs/middleware/validate-objectid.middleware.js';
+import { ValidateDtoMiddleware } from '../../libs/middleware/validate-dto.middleware.js';
 import { UserService } from './user.service.js';
 import { createUserSchema } from './user.dto.js';
+import { RestConfig } from '../../libs/config/index.js';
+import { FileMiddleware } from '../../libs/middleware/file.middleware.js';
 
-type ParamId = { id: string };
+type ParamUserId = { userId: string };
 
 @injectable()
 export class UserController extends BaseController {
-  private readonly router: Router;
-
   constructor(
     @inject(TYPES.Logger) protected override readonly logger: LoggerInterface,
     @inject(TYPES.UserService) private readonly userService: UserService,
+    @inject(TYPES.Config) private readonly config: RestConfig,
   ) {
     super(logger);
-    this.router = Router();
     this.initRoutes();
   }
 
   private initRoutes(): void {
-    this.router.post('/', asyncHandler(this.create));
-    this.router.get('/:id', asyncHandler(this.getById));
+    // POST /users — регистрация пользователя
+    this.addRoute(
+      HttpMethod.Post,
+      '/',
+      this.create,
+      [new ValidateDtoMiddleware(createUserSchema)]
+    );
+
+    // GET /users/:userId — получение пользователя по ID
+    this.addRoute(
+      HttpMethod.Get,
+      '/:userId',
+      this.show,
+      [new ValidateObjectIdMiddleware('userId')]
+    );
+
+    // POST /users/:userId/avatar — загрузка аватара
+    this.addRoute(
+      HttpMethod.Post,
+      '/:userId/avatar',
+      this.uploadAvatar,
+      [
+        new ValidateObjectIdMiddleware('userId'),
+        new FileMiddleware(this.config.get('uploadDirectory'), 'avatar', 1024 * 1024),
+      ]
+    );
   }
 
+  /**
+   * Регистрация нового пользователя.
+   */
   private create = async (req: Request, res: Response): Promise<void> => {
     try {
-      const dto = createUserSchema.parse(req.body);
+      const dto = req.body;
       const user = await this.userService.create(dto);
       this.logger.info(`UserController: User created with id ${user.id}`);
       this.created(res, user);
@@ -45,34 +74,53 @@ export class UserController extends BaseController {
         return;
       }
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`UserController: Unexpected error while creating user: ${errorMessage}`);
+      this.logger.error(`UserController: Unexpected error: ${errorMessage}`);
       this.internalServerError(res, 'Failed to create user');
     }
   };
 
-  private getById = async (req: Request<ParamId>, res: Response): Promise<void> => {
+  /**
+   * Получение пользователя по ID.
+   */
+  private show = async (req: Request<ParamUserId>, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
-      if (!id || id.trim().length === 0) {
-        this.badRequest(res, 'User id is required');
-        return;
-      }
-      const user = await this.userService.findById(id.trim());
+      const { userId } = req.params;
+      const user = await this.userService.findById(userId.trim());
       if (!user) {
-        this.notFound(res, `User with id ${id} not found`);
+        this.notFound(res, `User with id ${userId} not found`);
         return;
       }
       this.ok(res, user);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`UserController: Unexpected error while getting user: ${errorMessage}`);
+      this.logger.error(`UserController: Unexpected error: ${errorMessage}`);
       this.internalServerError(res, 'Failed to get user');
     }
   };
 
-  public getRouter(): Router {
-    return this.router;
-  }
+  /**
+   * Загрузка аватара пользователя.
+   */
+  private uploadAvatar = async (req: Request<ParamUserId>, res: Response): Promise<void> => {
+    // Приведение типа нужно, чтобы TypeScript знал о существовании req.file от multer
+    const reqWithFile = req as Request & { file?: Express.Multer.File };
+
+    if (!reqWithFile.file) {
+      this.badRequest(res, 'No file uploaded');
+      return;
+    }
+
+    try {
+      const { userId } = req.params;
+      const avatarUrl = `/upload/${reqWithFile.file.filename}`;
+      const updatedUser = await this.userService.updateAvatar(userId, avatarUrl);
+      this.ok(res, updatedUser);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.error(`UserController: uploadAvatar failed: ${msg}`);
+      this.internalServerError(res, 'Failed to upload avatar');
+    }
+  };
 }
 
 function isMongoDuplicateKeyError(error: unknown): boolean {

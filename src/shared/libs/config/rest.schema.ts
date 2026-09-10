@@ -13,6 +13,7 @@ export type RestSchema = {
   mongoDbName: string;
   jwtSecret: string;
   jwtExpiresIn: string;
+  uploadDirectory: string;
 };
 
 export const configRestSchema = convict<RestSchema>({
@@ -69,5 +70,11 @@ export const configRestSchema = convict<RestSchema>({
     format: String,
     default: '1d',
     env: 'JWT_EXPIRES_IN',
+  },
+  uploadDirectory: {
+    doc: 'Directory for uploaded files',
+    format: String,
+    default: './upload',
+    env: 'UPLOAD_DIRECTORY',
   },
 });
