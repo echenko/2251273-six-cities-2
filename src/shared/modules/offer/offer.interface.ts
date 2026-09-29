@@ -38,10 +38,13 @@ export interface OfferInterface {
 
 export type CreateOffer = Omit<
   OfferInterface,
-  'id' | 'createdAt' | 'updatedAt' | 'commentsCount' | 'rating'
+  'id' | 'createdAt' | 'updatedAt' | 'commentsCount'
 >;
 
-export type CreateOfferInput = Omit<CreateOffer, 'user'>;
+
+export type CreateOfferInput = Omit<CreateOffer, 'user' | 'rating'> & {
+  rating?: number;
+};
 
 export type UpdateOffer = Partial<
   Omit<OfferInterface, 'id' | 'createdAt' | 'updatedAt' | 'commentsCount' | 'rating' | 'user'>

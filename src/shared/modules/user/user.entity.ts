@@ -2,7 +2,7 @@ import { Document, model, Model, Schema, Types } from 'mongoose';
 import { generateId } from '../../helpers/index.js';
 import { UserInterface } from './user.interface.js';
 
-export const DEFAULT_AVATAR_URL = '/upload/default-avatar.png';
+export const DEFAULT_AVATAR_URL = '/img/avatar-default.svg';
 
 export type DocumentUser = UserInterface &
   Document & {
